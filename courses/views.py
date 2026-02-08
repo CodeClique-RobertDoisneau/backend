@@ -34,7 +34,7 @@ class SectionViewSet(MultipleSerializerMixin, ReadOnlyModelViewSet):
     def get_queryset(self):
         return Section.objects.all()
 
-class ItemViewSet(ReadOnlyModelViewSet):
+class ItemViewSet(MultipleSerializerMixin, ReadOnlyModelViewSet):
 
     serializer_class = serializers.ItemListSerializer
     detail_serializer_class = serializers.ItemDetailSerializer
