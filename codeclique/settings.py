@@ -28,7 +28,8 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True')
 
 ALLOWED_HOSTS = [
     'localhost',
-    'codeclique.fr'
+    'codeclique.fr',
+    'backend',
 ]
 
 
@@ -130,3 +131,10 @@ STATIC_URL = 'api/static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Sinon l'admin ne marche pas
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+]

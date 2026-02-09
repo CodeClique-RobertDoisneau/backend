@@ -7,21 +7,21 @@ class ItemListSerializer(ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ['id', 'title', 'level', 'difficulty']
+        fields = ['id', 'name', 'difficulty']
 
 
 class ItemDetailSerializer(ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ['id', 'title', 'content', 'level', 'difficulty']
+        fields = ['id', 'name', 'content', 'difficulty', 'created_at', 'modified_at']
 
 
 class SectionListSerializer(ModelSerializer):
 
     class Meta:
         model = Section
-        fields = ['id', 'title']
+        fields = ['id', 'title', 'difficulty']
 
 
 class SectionDetailSerializer(ModelSerializer):
@@ -29,19 +29,19 @@ class SectionDetailSerializer(ModelSerializer):
     items = ItemDetailSerializer(many=True, read_only=True)
     class Meta:
         model = Section
-        fields = ['id', 'title', 'level', 'difficulty', 'items']
+        fields = ['id', 'title', 'difficulty', 'created_at', 'modified_at', 'items']
 
 
 class ChapterListSerializer(ModelSerializer):
 
     class Meta:
         model = Chapter
-        fields = ['id', 'title', 'description']
+        fields = ['id', 'title', 'description', 'grade_level']
 
 
 class ChapterDetailSerializer(ModelSerializer):
-    sections = SectionDetailSerializer(many=True, read_only=True)
+    sections = SectionListSerializer(many=True, read_only=True)
 
     class Meta:
         model = Chapter
-        fields = ['id', 'title', 'description', 'created_at', 'modified_at', 'sections']
+        fields = ['id', 'title', 'description', 'grade_level', 'created_at', 'modified_at', 'sections']
