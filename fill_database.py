@@ -42,7 +42,7 @@ sec3.save()
 sec3.chapters.add(chap2)
 
 item1 = Item()
-item1.name = "Introduction et I"
+item1.title = "Introduction et I"
 item1.item_type = ItemType.LESSON
 item1.content = '''## INTRODUCTION
 Jusqu'à présent, nos programmes étaient linéaires : ils exécutaient les instructions les unes après les autres, toujours de la même façon. Mais dans la vie, on fait des choix ! "S'il pleut, je prends un parapluie, sinon je mets des lunettes de soleil". En Python, c'est pareil : on utilise des "conditions" pour dire à l'ordinateur d'exécuter certaines lignes de code seulement si une condition est remplie.
@@ -92,8 +92,8 @@ item1.sections.add(sec1)
 
 
 item2 = Item()
-item2.name = "exercice d'application directe I et II"
-item2.item_type = ItemType.EXAMPLE
+item2.title = "exercice d'application directe I et II"
+item2.item_type = ItemType.EXERCICE
 item2.content = '''1) Crée une variable mot_de_passe. Si le mot de passe est "PythonIsCool", affiche "Accès autorisé", sinon affiche "Accès refusé".'''
 item2.difficulty = 1
 item2.save()
@@ -101,7 +101,7 @@ item2.sections.add(sec1)
 
 
 item3 = Item()
-item3.name = "III"
+item3.title = "III"
 item3.item_type = ItemType.LESSON
 item3.content = '''## III/ L'instruction "elif" (sinon si) 
 Parfois, le monde n'est pas tout blanc ou tout noir, il y a plusieurs cas possibles. elif (contraction de "else if") permet de tester une nouvelle condition si la première est fausse.
@@ -124,8 +124,8 @@ item3.sections.add(sec1)
 
 
 item4 = Item()
-item4.name = "exercice d'application directe III"
-item4.item_type = ItemType.EXAMPLE
+item4.title = "exercice d'application directe III"
+item4.item_type = ItemType.EXERCICE
 item4.content = '''2) Crée une variable x. Affiche si le nombre est positif, négatif ou nul (indice : utilise elif).'''
 item4.difficulty = 1
 item4.save()
