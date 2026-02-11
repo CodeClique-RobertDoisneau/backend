@@ -156,6 +156,3 @@ Afin de faire vos tests pour le frontend, vous pouvez par exemple ajouter les mo
 - L'attribut `name` de Item n'est jamais affiché dans le frontend. Il sert juste à mieux repérer les différents items lorsque que nous gérons la base de données.
 - Les exercices d'application directe sont les "exemple de cours" intéractifs où les profs pourront afficher un code au tableau et permettre à tous les élèves de s'éxercer en direct. 
 - L'ItemType `Example` signifie exercice d'application directe (autrement appelé "exemple de cours")
-
-
-

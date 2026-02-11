@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
-from courses.views import ChapterViewSet, SectionViewSet, ItemViewSet
+from apps.courses.views import ChapterViewSet, SectionViewSet, ItemViewSet
 
 router = routers.SimpleRouter()
 router.register('chapter', ChapterViewSet, 'chapter')

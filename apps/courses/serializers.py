@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
-from courses.models import Chapter, Section, Item
+from apps.courses.models import Chapter, Section, Item
 
 
 class ItemListSerializer(ModelSerializer):

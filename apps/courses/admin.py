@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from courses.models import Chapter, Section, Item
+from apps.courses.models import Chapter, Section, Item
 
 
 

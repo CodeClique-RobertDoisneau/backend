@@ -1,4 +1,4 @@
-from courses.models import GradeLevel, Chapter, Section, Item, ItemType
+from apps.courses.models import GradeLevel, Chapter, Section, Item, ItemType
 
 ''' Script qui permet de remplir la base de données 
 avec les valeurs d'exemple données dans le readme.md.'''

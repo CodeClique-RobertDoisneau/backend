@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from courses.models import Chapter, Section, Item
-from courses import serializers
+from apps.courses.models import Chapter, Section, Item
+from apps.courses import serializers
 
 
 

@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-!h@chqjn%+z+=9e*#nc$yytgwyu8l^o)jt1kr_m64#ad%m1c!t'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True')
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'courses',
+    'apps.courses',
     'rest_framework'
 ]
 
@@ -82,11 +82,11 @@ WSGI_APPLICATION = 'codeclique.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'codeclique_db'), # 'NAME': BASE_DIR / 'codeclique_db',
-        'USER': os.environ.get('DB_USER', 'codeclique'),      # Idem
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'codeclique'),  # Idem
-        'HOST': os.environ.get('DB_HOST', 'localhost'),            # Le nom du service dans le docker-compose
         'PORT': '5432',
+        'HOST': os.environ.get('DB_HOST', 'frontend'),
+        'NAME': os.environ.get('DB_NAME', 'codeclique_db'),
+        'USER': os.environ.get('DB_USER', 'codeclique'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'codeclique'),
     }
 }
 
