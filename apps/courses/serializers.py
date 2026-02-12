@@ -14,7 +14,7 @@ class ItemDetailSerializer(ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ['id', 'title', 'item_type', 'content', 'difficulty', 'created_at', 'modified_at']
+        fields = ['id', 'title', 'item_type', 'content', 'difficulty', 'created_at', 'modified_at', 'sections']
 
 
 class SectionListSerializer(ModelSerializer):
@@ -29,7 +29,7 @@ class SectionDetailSerializer(ModelSerializer):
     items = ItemListSerializer(many=True, read_only=True)
     class Meta:
         model = Section
-        fields = ['id', 'title', 'description', 'difficulty', 'created_at', 'modified_at', 'items']
+        fields = ['id', 'title', 'description', 'difficulty', 'created_at', 'modified_at', 'items', 'chapters']
 
 
 class ChapterListSerializer(ModelSerializer):
