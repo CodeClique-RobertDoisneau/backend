@@ -21,12 +21,6 @@ S'il y a des conflits dans les migrations (=mises à jour de la base de données
 données (seulement votre version locale sera vidée) en supprimant le volume codeclique_postgres_data (avec la commande
 `docker volume remove codeclique_postgres_data` ou `docker compose down -v`). Ensuite réexécuter la commande ci-dessus.
 
-## Endpoints utiles pour le frontend
-* `/api/chapter/` : liste de tous les chapitres avec les attributs `['id', 'title', 'description', 'grade_level']` *(c'est pour la page d'accueil avec tous les chapitres)*
-* `/api/chapter/{id}` : détail d'un chapitre (`['id', 'title', 'description', 'grade_level', 'created_at', 'modified_at', 'sections']`) où `sections` est une liste des sections du chapitre avec les attributs `['id', 'title', 'description', 'difficulty']` *(c'est pour la page d'un chapitre avec toutes les sections (=notions))*
-* `/api/section/{id}` : détail d'une section (`['id', 'title', 'description', 'difficulty', 'created_at', 'modified_at', 'items']`) où `items` est une liste des items de la section avec les attributs `['id', 'title', 'item_type', 'difficulty']` *(c'est pour afficher la page d'une section (=notion))*
-* `/api/item/{id}` : détail d'un item en particulier `['id', 'title', 'item_type', 'content', 'difficulty', 'created_at', 'modified_at']` *(c'est pour la page avec seulement un item, par exemple quand le prof veut faire faire un exemple à tous les élèves)*
-
 ## Remplir la base de données
 Quand vous lancez pour la première fois le site avec Docker, et donc le backend, la base de données est vide. Afin que les endpoints ci-dessus ne renvoient pas des listes et des JSON vides, il est préférable pour le développement du frontend d'ajouter du contenu dans la base de données. Pour cela, deux options : 
 1. Lancer la commande suivante : \
@@ -168,3 +162,11 @@ Afin de faire vos tests pour le frontend, vous pouvez par exemple ajouter les mo
 - L'attribut `name` de Item n'est jamais affiché dans le frontend. Il sert juste à mieux repérer les différents items lorsque que nous gérons la base de données.
 - Les exercices d'application directe sont les "exemple de cours" intéractifs où les profs pourront afficher un code au tableau et permettre à tous les élèves de s'éxercer en direct. 
 - L'ItemType `Example` signifie exercice d'application directe (autrement appelé "exemple de cours")
+
+
+
+## Endpoints utiles pour le frontend
+* `/api/chapter/` : liste de tous les chapitres avec les attributs `['id', 'title', 'description', 'grade_level']` *(c'est pour la page d'accueil avec tous les chapitres)*
+* `/api/chapter/{id}` : détail d'un chapitre (`['id', 'title', 'description', 'grade_level', 'created_at', 'modified_at', 'sections']`) où `sections` est une liste des sections du chapitre avec les attributs `['id', 'title', 'description', 'difficulty']` *(c'est pour la page d'un chapitre avec toutes les sections (=notions))*
+* `/api/section/{id}` : détail d'une section (`['id', 'title', 'description', 'difficulty', 'created_at', 'modified_at', 'items']`) où `items` est une liste des items de la section avec les attributs `['id', 'title', 'item_type', 'difficulty']` *(c'est pour afficher la page d'une section (=notion))*
+* `/api/item/{id}` : détail d'un item en particulier `['id', 'title', 'item_type', 'content', 'difficulty', 'created_at', 'modified_at']` *(c'est pour la page avec seulement un item, par exemple quand le prof veut faire faire un exemple à tous les élèves)*
