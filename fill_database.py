@@ -117,11 +117,20 @@ def process_chapter(chapter_dir):
         }
     )
 
-    # Chercher les sous-dossiers qui pourraient être des sections
-    # On suppose que tout dossier contenant 'sec.json' est une section
-    for child in chapter_dir.iterdir():
-        if child.is_dir() and (child / 'sec.json').exists():
-            process_section(child, chapter)
+    # 1. On liste d'abord tous les dossiers candidats
+    potential_sections = [
+        child for child in chapter_dir.iterdir()
+        if child.is_dir() and (child / 'sec.json').exists()
+    ]
+
+    # 2. On les trie par nom de dossier
+    # Attention : Cela fait un tri alphabétique (sec1, sec10, sec2...)
+    # Si tes dossiers sont nommés sec1, sec2... il vaut mieux les nommer sec01, sec02
+    potential_sections.sort(key=lambda p: p.name)
+
+    # 3. On traite les sections dans l'ordre trié
+    for section_dir in potential_sections:
+        process_section(section_dir, chapter)
 
 
 def scan_directory(root_dir):
