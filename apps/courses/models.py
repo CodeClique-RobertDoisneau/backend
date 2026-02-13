@@ -11,7 +11,6 @@ class GradeLevel(models.TextChoices):
 
 class ItemType(models.TextChoices):
     LESSON = 'LESSON'
-    EXAMPLE = 'EXAMPLE' # Exemple d'application directe du cours (exercice directement inclus dans le cours)
     EXERCICE = 'EXERCICE'
     QUIZZ = 'QUIZZ'
 
@@ -32,6 +31,7 @@ class Chapter(models.Model):
 class Section(models.Model):
 
     title = CharField(max_length=100)
+    description = TextField(blank=True)
     difficulty = IntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)])
     chapters = ManyToManyField(Chapter, related_name='sections')
 
@@ -43,7 +43,7 @@ class Section(models.Model):
 
 class Item(models.Model):
 
-    name = CharField(max_length=100)
+    title = CharField(max_length=100)
     item_type = CharField(choices=ItemType.choices, max_length=8)
     content = TextField(null=True, blank=True) # Contenu en markdown de l'item
     difficulty = IntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)])
@@ -53,4 +53,4 @@ class Item(models.Model):
     modified_at = DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.title}'

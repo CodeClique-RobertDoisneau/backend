@@ -12,7 +12,7 @@ class SectionAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'difficulty')
 
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'difficulty')
+    list_display = ('id', 'title', 'item_type', 'difficulty')
 
 admin.site.register(Chapter, ChapterAdmin)
 admin.site.register(Section, SectionAdmin)

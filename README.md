@@ -1,19 +1,25 @@
 # Documentation Backend pour le Frontend
 
+Toutes les étapes sont nécessaires afin que le backend fonctionne correctement sur votre ordinateur.
+
+## Importer le backend depuis github
+Aller dans votre dossier projet (le dossier qui contient les dossiers backend et frontend), puis mettez à jour les
+fichiers à l'aide de \
+`git pull` \
+Ensuite, vous devez mettre à jour les fichiers dans le dossier backend :  \
+`git switch dev` \
+`git pull`
 
 ## Initialiser la base de données
-Le code backend (qui se trouve dans backend/) est indépendant de la base de données postgresql (qui se trouve dans data/). 
+Le code backend (qui se trouve dans backend/) est indépendant de la base de données postgresql (qui se trouve dans un 
+volume nommé "codeclique_postgres_data" de docker).
 Une fois que vous avez importé la dernière version du backend, la base de données (bdd) ne s'est pas automatiquement mise à jour pour correspondre au code backend.
 Il faut donc la mettre à jour en éxécutant la commande suivante après avoir lancé docker (`docker compose up --build`): \
 `docker compose exec backend python manage.py migrate` \
 (pour exécuter une commande avec le conteneur docker lancé, il suffit d'ouvrir un autre terminal dans le même dossier) \
-S'il y a des conflits dans les migrations (=mises à jour de la base de données), n'hésitez pas à vider de la base de données (seulement votre version locale sera vidée) en supprimant le dossier data. Ensuite réexécuter la commande ci-dessus.
-
-## Endpoints utiles pour le frontend
-* `/api/chapter/` : liste de tous les chapitres avec les attributs `['id', 'title', 'description', 'grade_level']` *(c'est pour la page d'accueil avec tous les chapitres)*
-* `/api/chapter/{id}` : détail d'un chapitre (`['id', 'title', 'description', 'grade_level', 'created_at', 'modified_at', 'sections']`) où `sections` est une liste des sections du chapitre avec les attributs `['id', 'title', 'difficulty']` *(c'est pour la page d'un chapitre avec toutes les sections (=notions))*
-* `/api/section/{id}` : détail d'une section (`['id', 'title', 'difficulty', 'created_at', 'modified_at', 'items']`) où `items` est une liste des items de la section avec les attributs `['id', 'name', 'content', 'difficulty', 'created_at', 'modified_at']` *(c'est pour afficher la page d'une section (=notion))*
-* `/api/item/{id}` : détail d'un item en particulier `['id', 'name', 'content', 'difficulty', 'created_at', 'modified_at']` *(c'est pour la page avec seulement un item, par exemple quand le prof veut faire faire un exemple à tous les élèves)*
+S'il y a des conflits dans les migrations (=mises à jour de la base de données), n'hésitez pas à vider de la base de 
+données (seulement votre version locale sera vidée) en supprimant le volume codeclique_postgres_data (avec la commande
+`docker volume remove codeclique_postgres_data` ou `docker compose down -v`). Ensuite réexécuter la commande ci-dessus.
 
 ## Remplir la base de données
 Quand vous lancez pour la première fois le site avec Docker, et donc le backend, la base de données est vide. Afin que les endpoints ci-dessus ne renvoient pas des listes et des JSON vides, il est préférable pour le développement du frontend d'ajouter du contenu dans la base de données. Pour cela, deux options : 
@@ -156,3 +162,11 @@ Afin de faire vos tests pour le frontend, vous pouvez par exemple ajouter les mo
 - L'attribut `name` de Item n'est jamais affiché dans le frontend. Il sert juste à mieux repérer les différents items lorsque que nous gérons la base de données.
 - Les exercices d'application directe sont les "exemple de cours" intéractifs où les profs pourront afficher un code au tableau et permettre à tous les élèves de s'éxercer en direct. 
 - L'ItemType `Example` signifie exercice d'application directe (autrement appelé "exemple de cours")
+
+
+
+## Endpoints utiles pour le frontend
+* `/api/chapter/` : liste de tous les chapitres avec les attributs `['id', 'title', 'description', 'grade_level']` *(c'est pour la page d'accueil avec tous les chapitres)*
+* `/api/chapter/{id}` : détail d'un chapitre (`['id', 'title', 'description', 'grade_level', 'created_at', 'modified_at', 'sections']`) où `sections` est une liste des sections du chapitre avec les attributs `['id', 'title', 'description', 'difficulty']` *(c'est pour la page d'un chapitre avec toutes les sections (=notions))*
+* `/api/section/{id}` : détail d'une section (`['id', 'title', 'description', 'difficulty', 'created_at', 'modified_at', 'items']`) où `items` est une liste des items de la section avec les attributs `['id', 'title', 'item_type', 'difficulty']` *(c'est pour afficher la page d'une section (=notion))*
+* `/api/item/{id}` : détail d'un item en particulier `['id', 'title', 'item_type', 'content', 'difficulty', 'created_at', 'modified_at']` *(c'est pour la page avec seulement un item, par exemple quand le prof veut faire faire un exemple à tous les élèves)*
