@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'apps.courses',
+    'apps.users',
     'rest_framework',
     'drf_spectacular',
 ]
@@ -151,3 +152,6 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+
+AUTH_USER_MODEL = 'users.User'
