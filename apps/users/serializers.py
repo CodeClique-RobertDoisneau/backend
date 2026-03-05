@@ -1,20 +1,14 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import HyperlinkedModelSerializer
 
 from apps.users.models import User, ClassGroup
 
-
-class UserListSerializer(ModelSerializer):
+class UserSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'role']
-
-class UserDetailSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'groups', 'class_groups']
+        fields = ['url', 'id', 'username', 'first_name', 'last_name', 'email', 'groups', 'class_groups']
 
 
-class ClassGroupSerializer(ModelSerializer):
+class ClassGroupSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = ClassGroup
-        fields = '__all__'
+        fields = ['url', 'id', 'class_name', 'academic_year', 'users', 'join_code']

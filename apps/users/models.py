@@ -18,6 +18,7 @@ class ClassGroup(models.Model):
     class_name = models.CharField(max_length=50, blank=False, null=False)
     academic_year = models.CharField(max_length=50, blank=False, null=False)
     users = models.ManyToManyField(User, through='Membership', related_name="class_groups")
+    join_code = models.CharField(max_length=6, blank=True, null=False)
 
     def __str__(self):
         return self.class_name
