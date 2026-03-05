@@ -2,17 +2,15 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
-from apps.courses.views import ChapterViewSet, SectionViewSet, ItemViewSet
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
+from apps.courses.views import NodeViewSet
 from apps.users.views import UserViewSet, ClassGroupViewSet
 
 router = routers.SimpleRouter()
-router.register('chapter', ChapterViewSet, 'chapter')
-router.register('section', SectionViewSet, 'section')
-router.register('item', ItemViewSet, 'item')
 router.register('class-groups', ClassGroupViewSet)
 router.register('users', UserViewSet)
+router.register('nodes', NodeViewSet)
 
 urlpatterns = [
     path('api/admin/', admin.site.urls),

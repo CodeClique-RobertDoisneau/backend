@@ -1,43 +1,13 @@
-from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, RetrieveModelMixin
+from rest_framework.viewsets import GenericViewSet
 
-from apps.courses.models import Chapter, Section, Item
-from apps.courses import serializers
-
-
-
-class MultipleSerializerMixin:
-
-    detail_serializer_class = None
-
-    def get_serializer_class(self):
-
-        if self.action == 'retrieve' and self.detail_serializer_class is not None:
-            # Si l'action demandée est le détail alors nous retournons le serializer de détail
-            return self.detail_serializer_class
-
-        return super().get_serializer_class()
-
-class ChapterViewSet(MultipleSerializerMixin, ReadOnlyModelViewSet):
-
-    serializer_class = serializers.ChapterListSerializer
-    detail_serializer_class = serializers.ChapterDetailSerializer
-
-    def get_queryset(self):
-        return Chapter.objects.all()
+from apps.courses.models import Node
+from apps.courses.serializers import NodeSerializer
 
 
-class SectionViewSet(MultipleSerializerMixin, ReadOnlyModelViewSet):
+class NodeViewSet(CreateModelMixin, UpdateModelMixin, RetrieveModelMixin, GenericViewSet):
 
-    serializer_class = serializers.SectionListSerializer
-    detail_serializer_class = serializers.SectionDetailSerializer
+    serializer_class = NodeSerializer
+    queryset = Node.objects.all()
 
-    def get_queryset(self):
-        return Section.objects.all()
 
-class ItemViewSet(MultipleSerializerMixin, ReadOnlyModelViewSet):
-
-    serializer_class = serializers.ItemListSerializer
-    detail_serializer_class = serializers.ItemDetailSerializer
-
-    def get_queryset(self):
-        return Item.objects.all()

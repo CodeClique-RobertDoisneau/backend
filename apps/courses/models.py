@@ -1,56 +1,77 @@
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils.translation import gettext_lazy as _
 from django.db import models
-from django.db.models import ManyToManyField
-from django.db.models.fields import CharField, TextField, DateTimeField, IntegerField
+from django.db.models import ManyToManyField, JSONField
+from django.db.models.fields import CharField, TextField, DateTimeField, IntegerField, BooleanField
 
 
-class GradeLevel(models.TextChoices):
-    SECONDE = 'SECONDE'
-    PREMIERE = 'PREMIERE'
-    TERMINALE = 'TERMINALE'
+class Node(models.Model):
 
-class ItemType(models.TextChoices):
-    LESSON = 'LESSON'
-    EXERCICE = 'EXERCICE'
-    QUIZZ = 'QUIZZ'
+    class Type(models.TextChoices):
+        SYLLABUS = "SY", _("Programme")
+        CHAPTER = "CH", _("Chapitre")
+        SECTION = "SE", _("Partie")
+        LESSON = "LE", _("Leçon")
+        QUIZ = "QU", _("Quiz")
+        EXERCISE = "EX", _("Exercice")
 
+    class GradeLevel(models.TextChoices):
+        SECONDE = 'SE', _("Seconde")
+        PREMIERE = 'PR', _("Première")
+        TERMINALE = 'TE', _("Terminale")
 
-class Chapter(models.Model):
+    class Difficulty(models.IntegerChoices):
+        EASY = 1, _("Facile")
+        MEDIUM = 2, _("Moyen")
+        HARD = 3, _("Difficile")
 
-    title = CharField(max_length=100)
-    description = TextField(blank=True)
-    grade_level = CharField(choices=GradeLevel.choices, max_length=9)
+    class Subject(models.TextChoices):
+        MATHS = "MA", _("Mathématiques")
+        PHYSICS = "PH", _("Physique")
+        COMPUTER_SCIENCE = "CO", _("Numérique et sciences informatiques")
 
+    owner = models.ForeignKey('users.User', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = DateTimeField(auto_now_add=True)
     modified_at = DateTimeField(auto_now=True)
+    type = CharField(max_length=2, choices=Type.choices,  blank=False, null=False)
+    public = BooleanField(null=False)
+    title = CharField(max_length=150, blank=False, null=False)
+    description = TextField(blank=True, null=False)
+    grade_level = CharField(max_length=2, choices=GradeLevel.choices)
+    difficulty = IntegerField(choices=Difficulty.choices, blank=False, null=False)
+    subject = CharField(max_length=2, choices=Subject.choices, blank=False, null=False)
+    content = JSONField(blank=False, null=False)
 
-
-    def __str__(self):
-        return f'{self.title}'
-
-class Section(models.Model):
-
-    title = CharField(max_length=100)
-    description = TextField(blank=True)
-    difficulty = IntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)])
-    chapters = ManyToManyField(Chapter, related_name='sections')
-
-    created_at = DateTimeField(auto_now_add=True)
-    modified_at = DateTimeField(auto_now=True)
+    children = ManyToManyField('self', through='NodeNode', symmetrical=False, related_name='parents',
+                               through_fields=('parent', 'child'))
 
     def __str__(self):
-        return f'{self.title}'
+        node_type = self.get_type_display()
+        subject = self.get_subject_display()
+        grade = self.get_grade_level_display()
 
-class Item(models.Model):
+        return f"Node : {self.title} ({node_type}, {subject}, {grade})"
 
-    title = CharField(max_length=100)
-    item_type = CharField(choices=ItemType.choices, max_length=8)
-    content = TextField(null=True, blank=True) # Contenu en markdown de l'item
-    difficulty = IntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)])
-    sections = ManyToManyField(Section, related_name='items')
+class NodeNode(models.Model):
 
-    created_at = DateTimeField(auto_now_add=True)
-    modified_at = DateTimeField(auto_now=True)
+    parent = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='child_links')
+    child = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='parent_links')
+    order_index = models.IntegerField(null=False)
+
+    class Meta:
+        unique_together = ('parent', 'child')
 
     def __str__(self):
-        return f'{self.title}'
+        return f"NodeNode : {self.parent} -> {self.child}"
+
+
+class ClassGroupSyllabus(models.Model):
+
+    class_group = models.ForeignKey('users.ClassGroup', on_delete=models.CASCADE)
+    node = models.ForeignKey('Node', on_delete=models.CASCADE)
+    order_index = models.IntegerField(null=False)
+
+    class Meta:
+        unique_together = ('class_group', 'node')
+
+    def __str__(self):
+        return f"CourseGroupSyllabus : {self.class_group} -- {self.node}"

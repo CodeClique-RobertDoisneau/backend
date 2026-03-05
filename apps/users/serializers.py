@@ -11,4 +11,4 @@ class UserSerializer(HyperlinkedModelSerializer):
 class ClassGroupSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = ClassGroup
-        fields = ['url', 'id', 'class_name', 'academic_year', 'users', 'join_code']
+        fields = ['url', 'id', 'class_name', 'academic_year', 'users', 'syllabus', 'join_code']
