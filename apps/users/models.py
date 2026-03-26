@@ -36,7 +36,7 @@ class Membership(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     class_group = models.ForeignKey(ClassGroup, on_delete=models.CASCADE)
-    user_status = models.CharField(max_length=2, choices=Status.choices)
+    user_status = models.CharField(max_length=2, choices=Status.choices, blank=False, null=False)
 
     class Meta:
         unique_together = ('user', 'class_group')

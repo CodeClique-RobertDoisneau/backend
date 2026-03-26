@@ -33,13 +33,13 @@ class Node(models.Model):
     created_at = DateTimeField(auto_now_add=True)
     modified_at = DateTimeField(auto_now=True)
     type = CharField(max_length=2, choices=Type.choices,  blank=False, null=False)
-    public = BooleanField(null=False)
+    public = BooleanField(null=False, default=False)
     title = CharField(max_length=150, blank=False, null=False)
     description = TextField(blank=True, null=False)
-    grade_level = CharField(max_length=2, choices=GradeLevel.choices)
-    difficulty = IntegerField(choices=Difficulty.choices, blank=False, null=False)
-    subject = CharField(max_length=2, choices=Subject.choices, blank=False, null=False)
-    content = JSONField(blank=False, null=False)
+    grade_level = CharField(max_length=2, choices=GradeLevel.choices, blank=True, null=False)
+    difficulty = IntegerField(choices=Difficulty.choices, blank=True, null=True)
+    subject = CharField(max_length=2, choices=Subject.choices, blank=True, null=False)
+    content = JSONField(blank=True, null=False)
 
     children = ManyToManyField('self', through='NodeNode', symmetrical=False, related_name='parents',
                                through_fields=('parent', 'child'))
@@ -55,7 +55,7 @@ class NodeNode(models.Model):
 
     parent = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='child_links')
     child = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='parent_links')
-    order_index = models.IntegerField(null=False)
+    order_index = models.IntegerField(blank=True, null=True)
 
     class Meta:
         unique_together = ('parent', 'child')
@@ -68,7 +68,7 @@ class ClassGroupSyllabus(models.Model):
 
     class_group = models.ForeignKey('users.ClassGroup', on_delete=models.CASCADE)
     node = models.ForeignKey('Node', on_delete=models.CASCADE)
-    order_index = models.IntegerField(null=False)
+    order_index = models.IntegerField(blank=True, null=True)
 
     class Meta:
         unique_together = ('class_group', 'node')
