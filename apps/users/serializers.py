@@ -1,5 +1,6 @@
 from rest_framework.serializers import HyperlinkedModelSerializer
 
+from apps.courses.serializers import ClassGroupSyllabusSerializer
 from apps.users.models import User, ClassGroup, Membership
 
 
@@ -18,6 +19,8 @@ class UserSerializer(HyperlinkedModelSerializer):
 
 
 class ClassGroupSerializer(HyperlinkedModelSerializer):
+    syllabus = ClassGroupSyllabusSerializer(source="syllabus_links", many=True, read_only=True)
+    users = MembershipSerializer(source="user_links", many=True, read_only=True)
     class Meta:
         model = ClassGroup
         fields = ['url', 'id', 'class_name', 'academic_year', 'users', 'syllabus', 'join_code']
