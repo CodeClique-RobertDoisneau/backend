@@ -1,14 +1,39 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
-from apps.courses.models import Node
+from apps.courses.models import Node, NodeNode, ClassGroupSyllabus
 import copy
 
-class NodeSerializer(ModelSerializer):
+from apps.users.models import ClassGroup
+
+
+class NodeListSerializer(ModelSerializer):
+    class Meta:
+        model = Node
+        fields = ['id', 'type', 'title', 'description', 'grade_level', 'difficulty', 'subject']
+
+
+class NodeNodeChildSerializer(ModelSerializer):
+    child = NodeListSerializer(read_only=True)
+
+    class Meta:
+        model = NodeNode
+        fields = ['id', 'order_index', 'child']
+
+class NodeNodeSerializer(ModelSerializer):
+
+    class Meta:
+        model = NodeNode
+        fields = ['id', 'parent', 'child', 'order_index']
+
+    
+class NodeDetailSerializer(ModelSerializer):
+
+    children = NodeNodeChildSerializer(source='child_links', many=True, read_only=True)
 
     class Meta:
         model = Node
-        fields = ['owner', 'created_at', 'modified_at', 'type', 'public', 'title', 'description', 'grade_level',
-                  'difficulty', 'subject', 'content']
+        fields = ['id', 'owner', 'created_at', 'modified_at', 'type', 'public', 'title', 'description', 'grade_level',
+                  'difficulty', 'subject', 'content', 'children']
 
     def to_representation(self, instance):
         
@@ -17,10 +42,13 @@ class NodeSerializer(ModelSerializer):
         content = copy.deepcopy(response.get("content", {}))
 
         if instance.type == Node.Type.QUIZ:
-            for question in content.get("quiz", []):
-                question.pop("answers", None)
+            if isinstance(content, list):
+                for question in content:
+                    if isinstance(question, dict):
+                        question.pop("answers", None)
         elif instance.type == Node.Type.EXERCISE:
-            content.get("ex", {}).pop("answer", None)
+            if isinstance(content, dict):
+                content.pop("answer", None)
         
         response["content"] = content
         return response
@@ -29,5 +57,12 @@ class NodeAnswersSerializer(ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ['owner', 'created_at', 'modified_at', 'type', 'public', 'title', 'description', 'grade_level',
+        fields = ['id', 'owner', 'created_at', 'modified_at', 'type', 'public', 'title', 'description', 'grade_level',
                   'difficulty', 'subject', 'content']
+
+
+class ClassGroupSyllabusSerializer(ModelSerializer):
+
+    class Meta:
+        model = ClassGroupSyllabus
+        fields = ['id', 'class_group', 'node', 'order_index']

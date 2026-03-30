@@ -34,8 +34,8 @@ class Membership(models.Model):
         MEMBER = "ME", _("Membre")
         ADMIN = "AD", _("Administrateur")
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    class_group = models.ForeignKey(ClassGroup, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='class_group_links')
+    class_group = models.ForeignKey(ClassGroup, on_delete=models.CASCADE, related_name='user_links')
     user_status = models.CharField(max_length=2, choices=Status.choices, blank=False, null=False)
 
     class Meta:

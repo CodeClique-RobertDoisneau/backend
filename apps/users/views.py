@@ -6,12 +6,11 @@ from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from apps.users.models import User, ClassGroup, Membership
-from apps.users.permissions import IsGroupMember, IsTeacher, IsGroupAdmin
-from apps.users.serializers import UserSerializer, ClassGroupSerializer
-
+from apps.users.permissions import IsGroupMember, IsTeacher, IsGroupAdmin, IsMembershipGroupAdmin
+from apps.users.serializers import UserSerializer, ClassGroupSerializer, MembershipSerializer
 
 
 class UserViewSet(RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
@@ -116,6 +115,26 @@ class ClassGroupViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, 
             return Response({'join_code': class_group.join_code}, status=status.HTTP_200_OK)
 
 
+class MembershipViewSet(ModelViewSet):
+    queryset = Membership.objects.all()
+    serializer_class = MembershipSerializer
+    # Permet au front de faire : GET /api/memberships/?class_group=5
+    filterset_fields = ['class_group', 'user']
+
+    def get_queryset(self):
+        user = self.request.user
+        # Seuls les administrateurs (du site) peuvent voir tous les memberships
+        if user.is_staff or user.is_superuser:
+            return self.queryset
+        # Les membres d'un groupe ne peuvent voir que les memberships de leur groupe
+        return self.queryset.filter(class_group__users=user)
+
+    def get_permissions(self):
+        self.permission_classes = [IsAuthenticated]
+        # Seul un admin du ClassGroup peut update, partial_update et delete un membership
+        if self.action in ['update', 'partial_update', 'destroy']:
+            self.permission_classes += [IsMembershipGroupAdmin]
+        return super().get_permissions()
 
 
 

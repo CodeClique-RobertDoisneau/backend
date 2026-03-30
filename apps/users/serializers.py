@@ -1,8 +1,17 @@
 from rest_framework.serializers import HyperlinkedModelSerializer
 
-from apps.users.models import User, ClassGroup
+from apps.users.models import User, ClassGroup, Membership
+
+
+class MembershipSerializer(HyperlinkedModelSerializer):
+    class Meta:
+        model = Membership
+        fields = ['url', 'id', 'user', 'class_group', 'user_status']
+
 
 class UserSerializer(HyperlinkedModelSerializer):
+    class_groups = MembershipSerializer(source="class_group_links", many=True, read_only=True)
+
     class Meta:
         model = User
         fields = ['url', 'id', 'username', 'first_name', 'last_name', 'email', 'groups', 'class_groups']
