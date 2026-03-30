@@ -24,7 +24,7 @@ données (seulement votre version locale sera vidée) en supprimant le volume co
 ## Remplir la base de données
 Quand vous lancez pour la première fois le site avec Docker, et donc le backend, la base de données est vide. Afin que les endpoints ci-dessus ne renvoient pas des listes et des JSON vides, il est préférable pour le développement du frontend d'ajouter du contenu dans la base de données. Pour cela, deux options : 
 1. Lancer la commande suivante : \
-`docker compose exec -T backend sh -c 'cat > /tmp/script.py && python manage.py shell -c "exec(open(\"/tmp/script.py\").read())"' < backend/fill_database.py` \
+`docker compose exec -T backend python manage.py shell -c "exec(open('fill_database.py').read())"` \
 Le script fill_database.py va faire le travail.
 
 2. Utiliser l'administration Django pour apprendre à manipuler la bdd :

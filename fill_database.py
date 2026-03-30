@@ -30,7 +30,7 @@ def get_or_create_codeclique_user():
     user, created = User.objects.get_or_create(username="codeclique")
     user.set_unusable_password()
     if not user.role:
-        user.role = User.Role.ADMIN
+        user.role = User.Role.STUDENT
     user.save()
     return user
 
