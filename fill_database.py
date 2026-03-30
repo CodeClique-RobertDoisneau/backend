@@ -51,27 +51,37 @@ def process_file_content(path, node_type, base_name):
         if md_path.exists():
             with open(md_path, 'r', encoding='utf-8') as f:
                 md_text = f.read()
-        content["lesson"] = md_text
+        content = {"content": md_text}
 
     elif node_type == Node.Type.EXERCISE:
-        ex_data = {}
-        if "answer" in json_data:
-            ex_data["answer"] = json_data.pop("answer")
+        content = {}
         if md_path.exists():
             with open(md_path, 'r', encoding='utf-8') as f:
-                ex_data["markdown"] = f.read()
+                content["content"] = f.read()
+                
         if py_path.exists():
-            with open(py_path, 'r', encoding='utf-8') as f:
-                ex_data["python"] = f.read()
-        content["ex"] = ex_data
+            import subprocess
+            try:
+                result = subprocess.run(
+                    ["python", str(py_path)], 
+                    capture_output=True, 
+                    text=True, 
+                    input="",
+                    timeout=2
+                )
+                content["answer"] = result.stdout.strip()
+            except subprocess.TimeoutExpired:
+                print(f"      Le script {py_path.name} contient une boucle infinie ou a expiré.")
+                content["answer"] = ""
+            except Exception as e:
+                print(f"      Erreur lors de l'exécution du script {py_path.name} : {e}")
         
     elif node_type == Node.Type.QUIZ:
-        # Le contenu du quiz est une liste de questions directement dans la clé 'content' du json
+        # Le contenu du quiz est une liste de questions
         if "content" in json_data:
-            content["quiz"] = json_data.pop("content")
+            content = json_data.pop("content")
         else:
-            # Solution de repli si tout le json correspond au format tableau du quiz
-            content["quiz"] = []
+            content = []
             
     return json_data, content
 
@@ -100,7 +110,7 @@ def sync_courses():
             grade_level=meta["grade_level"],
             subject=meta["subject"],
             difficulty=None,
-            content={}
+            content=""
         )
         
         # Chercher les chapitres
@@ -135,7 +145,7 @@ def process_chapter(path, parent_node, order, meta, user):
         grade_level=meta["grade_level"],
         subject=meta["subject"],
         difficulty=difficulty,
-        content={}
+        content=""
     )
     
     # Lier au programme
@@ -164,7 +174,7 @@ def process_section(path, parent_node, order, meta, user):
         grade_level=meta["grade_level"],
         subject=meta["subject"],
         difficulty=difficulty,
-        content={}
+        content=""
     )
     
     # Lier au chapitre

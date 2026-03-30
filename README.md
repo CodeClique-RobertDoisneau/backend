@@ -24,7 +24,7 @@ données (seulement votre version locale sera vidée) en supprimant le volume co
 ## Remplir la base de données
 Quand vous lancez pour la première fois le site avec Docker, et donc le backend, la base de données est vide. Afin que les endpoints ci-dessus ne renvoient pas des listes et des JSON vides, il est préférable pour le développement du frontend d'ajouter du contenu dans la base de données. Pour cela, deux options : 
 1. Lancer la commande suivante : \
-`docker compose exec -T backend python manage.py shell < backend/fill_database.py` \
+`docker compose exec -T backend sh -c 'cat > /tmp/script.py && python manage.py shell -c "exec(open(\"/tmp/script.py\").read())"' < backend/fill_database.py` \
 Le script fill_database.py va faire le travail.
 
 2. Utiliser l'administration Django pour apprendre à manipuler la bdd :
@@ -53,13 +53,13 @@ Afin de faire vos tests pour le frontend, vous pouvez par exemple ajouter les ob
   description : ce que vous voulez \
   grade_level : `Seconde` \
   subject : `Mathématiques` \
-  content : `{}`
+  content : `""`
   - title : `Chapitre 2 : Les boucles` \
   type : `Chapitre` \
   description : ce que vous voulez \
   grade_level : `Seconde` \
   subject : `Mathématiques` \
-  content : `{}`
+  content : `""`
 
 
 - 3 `Node` de type `Partie` pour le chapitre 2 :
@@ -67,21 +67,21 @@ Afin de faire vos tests pour le frontend, vous pouvez par exemple ajouter les ob
   type : `Partie` \
   difficulty : `1` \
   subject : `Mathématiques` \
-  content : `{}` \
+  content : `""` \
   parents : Chapitre 2 : Les boucles (il faut l'ajouter via l'interface `Node nodes`)
 
   - title : `Partie 2 : les boucles - while` \
   type : `Partie` \
   difficulty : `1` \
   subject : `Mathématiques` \
-  content : `{}` \
+  content : `""` \
   parents : Chapitre 2 : Les boucles (il faut l'ajouter via l'interface `Node nodes`)
 
   - title : `Partie 3 : les boucles - for` \
   type : `Partie` \
   difficulty : `1` \
   subject : `Mathématiques` \
-  content : `{}` \
+  content : `""` \
   parents : Chapitre 2 : Les boucles (il faut l'ajouter via l'interface `Node nodes`)
 
 
@@ -91,7 +91,7 @@ Afin de faire vos tests pour le frontend, vous pouvez par exemple ajouter les ob
   content : 
     ```json
     {
-      "lesson": "## INTRODUCTION\nJusqu'à présent, nos programmes étaient linéaires : ils exécutaient les instructions les unes après les autres, toujours de la même façon. Mais dans la vie, on fait des choix ! \"S'il pleut, je prends un parapluie, sinon je mets des lunettes de soleil\". En Python, c'est pareil : on utilise des \"conditions\" pour dire à l'ordinateur d'exécuter certaines lignes de code seulement si une condition est remplie.\n\n## I/ L'instruction \"if\" (si) \nC'est la base de la condition. On teste si quelque chose est Vrai (True).\n\n**Syntaxe :** \n```python\nif condition : \n    # Instruction à exécuter si c'est vrai\n```\n\n**⚠️ Attention !**   \nNe pas oublier les deux points \":\" à la fin de la ligne du if.  \nL'indentation (le décalage vers la droite) est obligatoire ! C'est elle qui dit à Python : \"cette ligne fait partie du bloc conditionnel\".\n\n**Exemple :** \n```python\nage = 18 \nif age >= 18: \n    print(\"Vous êtes majeur !\")\n```\n\n## II/ L'instruction \"else\" (sinon) \nC'est l'alternative. Si la condition du if est fausse, alors on exécute ce qu'il y a dans le else.\n\n**Syntaxe :** \n```python\nif condition : \n    # Fait ça si c'est vrai \nelse : \n    # Fait ça si c'est faux\n```\n\n**Exemple :** \n```python\nnote = 8 \nif note >= 10: \n    print(\"Bravo, tu as la moyenne !\") \nelse: \n    print(\"Il faut encore réviser un peu.\")\n```"
+      "content": "## INTRODUCTION\nJusqu'à présent, nos programmes étaient linéaires : ils exécutaient les instructions les unes après les autres, toujours de la même façon. Mais dans la vie, on fait des choix ! \"S'il pleut, je prends un parapluie, sinon je mets des lunettes de soleil\". En Python, c'est pareil : on utilise des \"conditions\" pour dire à l'ordinateur d'exécuter certaines lignes de code seulement si une condition est remplie.\n\n## I/ L'instruction \"if\" (si) \nC'est la base de la condition. On teste si quelque chose est Vrai (True).\n\n**Syntaxe :** \n```python\nif condition : \n    # Instruction à exécuter si c'est vrai\n```\n\n**⚠️ Attention !**   \nNe pas oublier les deux points \":\" à la fin de la ligne du if.  \nL'indentation (le décalage vers la droite) est obligatoire ! C'est elle qui dit à Python : \"cette ligne fait partie du bloc conditionnel\".\n\n**Exemple :** \n```python\nage = 18 \nif age >= 18: \n    print(\"Vous êtes majeur !\")\n```\n\n## II/ L'instruction \"else\" (sinon) \nC'est l'alternative. Si la condition du if est fausse, alors on exécute ce qu'il y a dans le else.\n\n**Syntaxe :** \n```python\nif condition : \n    # Fait ça si c'est vrai \nelse : \n    # Fait ça si c'est faux\n```\n\n**Exemple :** \n```python\nnote = 8 \nif note >= 10: \n    print(\"Bravo, tu as la moyenne !\") \nelse: \n    print(\"Il faut encore réviser un peu.\")\n```"
     }
     ```
     difficulty : `1` \
@@ -103,9 +103,8 @@ Afin de faire vos tests pour le frontend, vous pouvez par exemple ajouter les ob
     content : 
     ```json
     {
-      "ex": {
-        "markdown": "1) Crée une variable mot_de_passe. Si le mot de passe est \"PythonIsCool\", affiche \"Accès autorisé\", sinon affiche \"Accès refusé\"."
-      }
+      "content": "1) Crée une variable mot_de_passe. Si le mot de passe est \"PythonIsCool\", affiche \"Accès autorisé\", sinon affiche \"Accès refusé\".",
+      "answer": "Le résultat attendu du programme."
     }
     ```
     difficulty : `1` \
@@ -117,7 +116,7 @@ Afin de faire vos tests pour le frontend, vous pouvez par exemple ajouter les ob
   content : 
     ```json
     {
-      "lesson": "## III/ L'instruction \"elif\" (sinon si) \nParfois, le monde n'est pas tout blanc ou tout noir, il y a plusieurs cas possibles. elif (contraction de \"else if\") permet de tester une nouvelle condition si la première est fausse.\n\n**Exemple :**\n```python\ntemperature = 20\n\nif temperature > 30: \n    print(\"Il fait très chaud !\") \nelif temperature > 15: \n    print(\"Il fait bon.\") \nelse: \n    print(\"Il fait froid, mets un manteau !\")\n```"
+      "content": "## III/ L'instruction \"elif\" (sinon si) \nParfois, le monde n'est pas tout blanc ou tout noir, il y a plusieurs cas possibles. elif (contraction de \"else if\") permet de tester une nouvelle condition si la première est fausse.\n\n**Exemple :**\n```python\ntemperature = 20\n\nif temperature > 30: \n    print(\"Il fait très chaud !\") \nelif temperature > 15: \n    print(\"Il fait bon.\") \nelse: \n    print(\"Il fait froid, mets un manteau !\")\n```"
     }
     ```
     difficulty : `1` \
@@ -129,9 +128,8 @@ Afin de faire vos tests pour le frontend, vous pouvez par exemple ajouter les ob
   content : 
     ```json
     {
-      "ex": {
-        "markdown": "2) Crée une variable x. Affiche si le nombre est positif, négatif ou nul (indice : utilise elif)."
-      }
+      "content": "2) Crée une variable x. Affiche si le nombre est positif, négatif ou nul (indice : utilise elif).",
+      "answer": "Le résultat attendu du programme."
     }
     ```
     difficulty : `1` \
