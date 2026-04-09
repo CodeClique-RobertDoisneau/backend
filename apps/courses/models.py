@@ -66,8 +66,8 @@ class NodeNode(models.Model):
 
 class ClassGroupSyllabus(models.Model):
 
-    class_group = models.ForeignKey('users.ClassGroup', on_delete=models.CASCADE)
-    node = models.ForeignKey('Node', on_delete=models.CASCADE)
+    class_group = models.ForeignKey('users.ClassGroup', on_delete=models.CASCADE, related_name='syllabus_links')
+    node = models.ForeignKey('Node', on_delete=models.CASCADE, related_name='class_group_links')
     order_index = models.IntegerField(blank=True, null=True)
 
     class Meta:

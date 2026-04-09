@@ -4,13 +4,16 @@ from rest_framework import routers
 
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
-from apps.courses.views import NodeViewSet
-from apps.users.views import UserViewSet, ClassGroupViewSet
+from apps.courses.views import NodeViewSet, NodeNodeViewSet, ClassGroupSyllabusViewSet
+from apps.users.views import UserViewSet, ClassGroupViewSet, MembershipViewSet
 
 router = routers.SimpleRouter()
 router.register('class-groups', ClassGroupViewSet)
 router.register('users', UserViewSet)
 router.register('nodes', NodeViewSet)
+router.register('memberships', MembershipViewSet)
+router.register('nodenodes', NodeNodeViewSet)
+router.register('classgroupsyllabus', ClassGroupSyllabusViewSet)
 
 urlpatterns = [
     path('api/admin/', admin.site.urls),
