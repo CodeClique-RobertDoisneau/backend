@@ -4,7 +4,7 @@ from apps.courses.models import Node, NodeNode, ClassGroupSyllabus
 
 
 class NodeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title')
+    list_display = ('id', 'title', 'type', 'grade_level', 'subject')
 
 class NodeNodeAdmin(admin.ModelAdmin):
     list_display = ('id', 'parent', 'child')
