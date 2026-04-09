@@ -1,47 +1,10 @@
 from rest_framework.serializers import ModelSerializer
 
-from apps.courses.models import Chapter, Section, Item
+from apps.courses.models import Node
 
 
-class ItemListSerializer(ModelSerializer):
-
-    class Meta:
-        model = Item
-        fields = ['id', 'title', 'item_type', 'difficulty']
-
-
-class ItemDetailSerializer(ModelSerializer):
+class NodeSerializer(ModelSerializer):
 
     class Meta:
-        model = Item
-        fields = ['id', 'title', 'item_type', 'content', 'difficulty', 'created_at', 'modified_at', 'sections']
-
-
-class SectionListSerializer(ModelSerializer):
-
-    class Meta:
-        model = Section
-        fields = ['id', 'title', 'description', 'difficulty']
-
-
-class SectionDetailSerializer(ModelSerializer):
-
-    items = ItemListSerializer(many=True, read_only=True)
-    class Meta:
-        model = Section
-        fields = ['id', 'title', 'description', 'difficulty', 'created_at', 'modified_at', 'items', 'chapters']
-
-
-class ChapterListSerializer(ModelSerializer):
-
-    class Meta:
-        model = Chapter
-        fields = ['id', 'title', 'description', 'grade_level']
-
-
-class ChapterDetailSerializer(ModelSerializer):
-    sections = SectionListSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Chapter
-        fields = ['id', 'title', 'description', 'grade_level', 'created_at', 'modified_at', 'sections']
+        model = Node
+        fields = '__all__'

@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'apps.courses',
-    'rest_framework'
+    'apps.users',
+    'rest_framework',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -139,3 +141,18 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
     "https://codeclique.fr",
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'CodeClique API',
+    'DESCRIPTION': "L'API de CodeClique.",
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
+
+AUTH_USER_MODEL = 'users.User'

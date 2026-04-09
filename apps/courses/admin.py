@@ -1,19 +1,17 @@
 from django.contrib import admin
 
-from apps.courses.models import Chapter, Section, Item
+from apps.courses.models import Node, NodeNode, ClassGroupSyllabus
 
 
+class NodeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title')
 
+class NodeNodeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'parent', 'child')
 
-class ChapterAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'grade_level')
+class CourseGroupSyllabusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'class_group', 'node')
 
-class SectionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'difficulty')
-
-class ItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'item_type', 'difficulty')
-
-admin.site.register(Chapter, ChapterAdmin)
-admin.site.register(Section, SectionAdmin)
-admin.site.register(Item, ItemAdmin)
+admin.site.register(Node, NodeAdmin)
+admin.site.register(NodeNode, NodeNodeAdmin)
+admin.site.register(ClassGroupSyllabus, CourseGroupSyllabusAdmin)

@@ -10,4 +10,5 @@ dependencies = [
     "djangorestframework-simplejwt~=5.5.0",
     "gunicorn~=25.0.0",
     "psycopg[binary]~=3.3.0",
+    "drf-spectacular~=0.29.0"
 ]
