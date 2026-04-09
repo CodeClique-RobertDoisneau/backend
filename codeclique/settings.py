@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.courses',
     'apps.users',
+    'apps.records',
     'rest_framework',
     'drf_spectacular',
 ]

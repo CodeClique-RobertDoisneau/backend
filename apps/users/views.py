@@ -113,7 +113,6 @@ class ClassGroupViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, 
             return Response({'join_code': class_group.join_code}, status=status.HTTP_200_OK)
 
         else:
-            # Le code existait déjà
             return Response({'join_code': class_group.join_code}, status=status.HTTP_200_OK)
 
 
