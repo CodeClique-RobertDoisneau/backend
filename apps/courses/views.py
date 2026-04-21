@@ -40,7 +40,8 @@ class NodeViewSet(CreateModelMixin, UpdateModelMixin, RetrieveModelMixin, Generi
         
         user_answer = request.data["answer"]
         if node.type == Node.Type.QUIZ:
-            correct_answers = [q.get("answers") for q in node.content]
+            quiz_data = node.content.get("data", []) if isinstance(node.content, dict) else node.content
+            correct_answers = [q.get("answers") for q in quiz_data if isinstance(q, dict)]
 
             # On vérifie que les réponses de l'utilisateur sont sous le bon format
             if len(user_answer) != len(correct_answers):
@@ -67,7 +68,7 @@ class NodeViewSet(CreateModelMixin, UpdateModelMixin, RetrieveModelMixin, Generi
                 }
             )
 
-            return Response({ "answers": correct_answers }, status=HTTP_200_OK)
+            return Response({"content": {"data": node.content.get("data", [])}}, status=HTTP_200_OK)
 
         elif node.type == Node.Type.EXERCISE:
             correct_answer = node.content.get("answer")
@@ -90,8 +91,21 @@ class NodeViewSet(CreateModelMixin, UpdateModelMixin, RetrieveModelMixin, Generi
 
             return Response({ "correct" : user_answer == correct_answer },
                             status=HTTP_200_OK)
+        
+        elif node.type == Node.Type.LESSON:
+            serializer = NodeAnswersSerializer(node)
+            Attempt.objects.create(
+                user=request.user, 
+                node=node, 
+                attempt={
+                    "node": serializer.data, 
+                    "answer": user_answer
+                }
+            )
+            return Response(status=HTTP_200_OK)
+
         else:
-            raise ValidationError("Le type de noeu est invalide.")
+            raise ValidationError("Le type de nœud est invalide.")
 
     @action(detail=False, methods=['GET'], url_path=r'codeclique(?:/(?P<path>[a-z/]+))?')
     def codeclique(self, request, path=None):
