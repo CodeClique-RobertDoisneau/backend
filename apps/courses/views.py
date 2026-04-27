@@ -7,8 +7,8 @@ from rest_framework.status import HTTP_200_OK, HTTP_409_CONFLICT, HTTP_500_INTER
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework.exceptions import ValidationError
 
-from apps.courses.models import Node, NodeNode, ClassGroupSyllabus
-from apps.courses.serializers import NodeDetailSerializer, NodeAnswersSerializer, NodeNodeSerializer, \
+from apps.courses.models import Node, NodeLink, ClassGroupSyllabus
+from apps.courses.serializers import NodeDetailSerializer, NodeAnswersSerializer, NodeLinkSerializer, \
     ClassGroupSyllabusSerializer
 from apps.records.models import Attempt
 from apps.users.models import User
@@ -130,10 +130,10 @@ class NodeViewSet(CreateModelMixin, UpdateModelMixin, RetrieveModelMixin, Generi
         return Response(serializer.data, status=HTTP_200_OK)
 
 
-class NodeNodeViewSet(ModelViewSet):
-    queryset = NodeNode.objects.all()
-    serializer_class = NodeNodeSerializer
-    # Permet au front de faire : GET /api/nodenodes/?parent=2
+class NodeLinkViewSet(ModelViewSet):
+    queryset = NodeLink.objects.all()
+    serializer_class = NodeLinkSerializer
+    # Permet au front de faire : GET /api/nodelinks/?parent=2
     filterset_fields = ['parent', 'child']
 
 class ClassGroupSyllabusViewSet(ModelViewSet):

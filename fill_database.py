@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 # Ces lignes permettent d'importer les modèles même si le script est lancé via le shell
-from apps.courses.models import Node, NodeNode
+from apps.courses.models import Node, NodeLink
 
 User = get_user_model()
 
@@ -149,7 +149,7 @@ def process_chapter(path, parent_node, order, meta, user):
     )
     
     # Lier au programme
-    NodeNode.objects.create(parent=parent_node, child=chapter_node, order_index=order)
+    NodeLink.objects.create(parent=parent_node, child=chapter_node, order_index=order)
     
     # Traiter le contenu du chapitre (sections, leçons, exercices, quiz)
     process_children(path, chapter_node, meta, user)
@@ -178,7 +178,7 @@ def process_section(path, parent_node, order, meta, user):
     )
     
     # Lier au chapitre
-    NodeNode.objects.create(parent=parent_node, child=section_node, order_index=order)
+    NodeLink.objects.create(parent=parent_node, child=section_node, order_index=order)
     
     # Traiter le contenu de la section
     process_children(path, section_node, meta, user)
@@ -256,7 +256,7 @@ def process_children(parent_path, parent_node, meta, user):
                 content=content
             )
             
-            NodeNode.objects.create(parent=parent_node, child=leaf_node, order_index=order)
+            NodeLink.objects.create(parent=parent_node, child=leaf_node, order_index=order)
 
 with transaction.atomic():
     sync_courses()
