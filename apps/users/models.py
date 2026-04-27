@@ -21,7 +21,7 @@ class ClassGroup(models.Model):
     users = models.ManyToManyField(User, through='Membership', related_name="class_groups")
     syllabus = models.ManyToManyField('courses.Node', through='courses.ClassGroupSyllabus',
                                       related_name="class_groups")
-    join_code = models.CharField(max_length=6, blank=True, null=False)
+    join_code = models.CharField(max_length=6, blank=True, null=True, unique=True, default=None)
 
     def __str__(self):
         return f'ClassGroup: {self.class_name}'
