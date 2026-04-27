@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
-from apps.courses.models import Node, NodeNode, ClassGroupSyllabus
+from apps.courses.models import Node, NodeLink, ClassGroupSyllabus
 import copy
 
 from apps.users.models import ClassGroup
@@ -12,23 +12,23 @@ class NodeListSerializer(ModelSerializer):
         fields = ['id', 'type', 'title', 'description', 'grade_level', 'difficulty', 'subject']
 
 
-class NodeNodeChildSerializer(ModelSerializer):
+class NodeLinkChildSerializer(ModelSerializer):
     child = NodeListSerializer(read_only=True)
 
     class Meta:
-        model = NodeNode
+        model = NodeLink
         fields = ['id', 'order_index', 'child']
 
-class NodeNodeSerializer(ModelSerializer):
+class NodeLinkSerializer(ModelSerializer):
 
     class Meta:
-        model = NodeNode
+        model = NodeLink
         fields = ['id', 'parent', 'child', 'order_index']
 
     
 class NodeDetailSerializer(ModelSerializer):
 
-    children = NodeNodeChildSerializer(source='child_links', many=True, read_only=True)
+    children = NodeLinkChildSerializer(source='child_links', many=True, read_only=True)
 
     class Meta:
         model = Node

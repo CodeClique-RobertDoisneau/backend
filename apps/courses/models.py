@@ -41,7 +41,7 @@ class Node(models.Model):
     subject = CharField(max_length=2, choices=Subject.choices, blank=True, null=False)
     content = JSONField(blank=True, null=False)
 
-    children = ManyToManyField('self', through='NodeNode', symmetrical=False, related_name='parents',
+    children = ManyToManyField('self', through='NodeLink', symmetrical=False, related_name='parents',
                                through_fields=('parent', 'child'))
 
     def __str__(self):
@@ -51,7 +51,7 @@ class Node(models.Model):
 
         return f"Node : {self.title} ({node_type}, {subject}, {grade})"
 
-class NodeNode(models.Model):
+class NodeLink(models.Model):
 
     parent = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='child_links')
     child = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='parent_links')
@@ -61,7 +61,7 @@ class NodeNode(models.Model):
         unique_together = ('parent', 'child')
 
     def __str__(self):
-        return f"NodeNode : {self.parent} -> {self.child}"
+        return f"NodeLink : {self.parent} -> {self.child}"
 
 
 class ClassGroupSyllabus(models.Model):
