@@ -12,17 +12,41 @@ from apps.courses.serializers import NodeDetailSerializer, NodeAnswersSerializer
     ClassGroupSyllabusSerializer
 from apps.records.models import Attempt
 from apps.users.models import User
+from django.db.models import Q
+from apps.courses.permissions import (
+    CanRetrieveNode, CanCreateNode, CanEditNode, 
+    CanRetrieveNodeLink, CanEditNodeLink, 
+    CanRetrieveSyllabusLink, CanEditClassGroupSyllabus
+)
 
 
-class NodeViewSet(CreateModelMixin, UpdateModelMixin, RetrieveModelMixin, GenericViewSet):
+class NodeViewSet(ModelViewSet):
 
     serializer_class = NodeDetailSerializer
     queryset = Node.objects.all()
-
+    
     def get_permissions(self):
         if self.action == "answer":
             return [IsAuthenticated()]
+        if self.action == "create":
+            return [CanCreateNode()]
+        if self.action in ["update", "partial_update", "destroy"]:
+            return [CanEditNode()]
+        if self.action in ["retrieve", "list"]:
+            return [CanRetrieveNode()]
         return super().get_permissions()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return queryset
+        
+        q_objects = Q(public=True)
+        if self.request.user.is_authenticated:
+            q_objects |= Q(owner=self.request.user)
+            q_objects |= Q(authorized_groups__users=self.request.user)
+            
+        return queryset.filter(q_objects).distinct()
 
     @action(detail=True, methods=['POST'], url_path='answer')
     def answer(self, request, pk):
@@ -136,13 +160,46 @@ class NodeLinkViewSet(ModelViewSet):
     # Permet au front de faire : GET /api/nodelinks/?parent=2
     filterset_fields = ['parent', 'child']
 
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [CanEditNodeLink()]
+        if self.action in ["retrieve", "list"]:
+            return [CanRetrieveNodeLink()]
+        return super().get_permissions()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return queryset
+            
+        q_objects = Q(parent__public=True)
+        if self.request.user.is_authenticated:
+            q_objects |= Q(parent__owner=self.request.user)
+            q_objects |= Q(parent__authorized_groups__users=self.request.user)
+            
+        return queryset.filter(q_objects).distinct()
+
 class ClassGroupSyllabusViewSet(ModelViewSet):
     queryset = ClassGroupSyllabus.objects.all()
     serializer_class = ClassGroupSyllabusSerializer
     # Permet au front de faire : GET /api/classgroupsyllabus/?class_group=3
     filterset_fields = ['class_group', 'node']
 
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [CanEditClassGroupSyllabus()]
+        if self.action in ["retrieve", "list"]:
+            return [CanRetrieveSyllabusLink()]
+        return super().get_permissions()
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return queryset
+            
+        if self.request.user.is_authenticated:
+            return queryset.filter(class_group__users=self.request.user).distinct()
+        return queryset.none()
 
 
 
