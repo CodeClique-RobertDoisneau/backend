@@ -40,6 +40,7 @@ class Node(models.Model):
     difficulty = IntegerField(choices=Difficulty.choices, blank=True, null=True)
     subject = CharField(max_length=2, choices=Subject.choices, blank=True, null=False)
     content = JSONField(blank=True, null=False)
+    authorized_groups = models.ManyToManyField('users.ClassGroup', related_name='authorized_nodes', blank=True)
 
     children = ManyToManyField('self', through='NodeLink', symmetrical=False, related_name='parents',
                                through_fields=('parent', 'child'))
@@ -50,6 +51,32 @@ class Node(models.Model):
         grade = self.get_grade_level_display()
 
         return f"Node : {self.title} ({node_type}, {subject}, {grade})"
+
+    def update_authorized_groups(self, visited=None):
+        """
+        Met à jour les authorized_groups qui doivent être les authorized_groups hérités des parents
+        + les ClassGroups explicitement liés (via class_groups) dans le cas d'un syllabus.
+        Propage les changements aux enfants.
+        """
+        if visited is None:
+            visited = set()
+        
+        # On prévient d'une boucle infinie en cas de cyle dans le graphe des noeuds
+        if self.pk in visited:
+            return
+        visited.add(self.pk)
+
+        expected_groups = set(self.class_groups.all())
+        for parent in self.parents.all():
+            expected_groups.update(parent.authorized_groups.all())
+        
+        current_groups = set(self.authorized_groups.all())
+        
+        if expected_groups != current_groups:
+            self.authorized_groups.set(expected_groups)
+            for child in self.children.all():
+                child.update_authorized_groups(visited)
+
 
 class NodeLink(models.Model):
 
