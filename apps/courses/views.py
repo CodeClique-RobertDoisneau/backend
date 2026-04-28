@@ -18,13 +18,28 @@ from apps.courses.permissions import (
     CanRetrieveNodeLink, CanEditNodeLink, 
     CanRetrieveSyllabusLink, CanEditClassGroupSyllabus
 )
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class NodeViewSet(ModelViewSet):
 
     serializer_class = NodeDetailSerializer
     queryset = Node.objects.all()
-    
+
+    # Configuration des filtres
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+
+    # 1. Filtres exacts (ex: ?type=QU&difficulty=2)
+    filterset_fields = ['type', 'subject', 'grade_level', 'difficulty', 'public', 'owner']
+
+    # 2. Recherche textuelle (ex: ?search=boucle for)
+    search_fields = ['title', 'description']
+
+    # 3. Tri (ex: ?ordering=-created_at)
+    ordering_fields = ['id', 'created_at', 'modified_at', 'difficulty']
+    ordering = ['id'] # Tri par défaut
+        
     def get_permissions(self):
         if self.action == "answer":
             return [IsAuthenticated()]
@@ -157,8 +172,17 @@ class NodeViewSet(ModelViewSet):
 class NodeLinkViewSet(ModelViewSet):
     queryset = NodeLink.objects.all()
     serializer_class = NodeLinkSerializer
-    # Permet au front de faire : GET /api/nodelinks/?parent=2
+
+    # Configuration des filtres
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+
+    # 1. Filtres exacts (ex: GET /api/nodelinks/?parent=2)
     filterset_fields = ['parent', 'child']
+
+    # 2. Tri (ex: ?ordering=-id)
+    ordering_fields = ['id', 'order_index']
+    ordering = ['order_index'] # Tri par défaut
+    
 
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy"]:
@@ -182,8 +206,16 @@ class NodeLinkViewSet(ModelViewSet):
 class ClassGroupSyllabusViewSet(ModelViewSet):
     queryset = ClassGroupSyllabus.objects.all()
     serializer_class = ClassGroupSyllabusSerializer
-    # Permet au front de faire : GET /api/classgroupsyllabus/?class_group=3
+
+    # Configuration des filtres
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+
+    # 1. Filtres exacts (ex: GET /api/classgroupsyllabus/?class_group=3)
     filterset_fields = ['class_group', 'node']
+
+    # 2. Tri (ex: ?ordering=-id)
+    ordering_fields = ['id', 'order_index']
+    ordering = ['order_index'] # Tri par défaut
 
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy"]:
