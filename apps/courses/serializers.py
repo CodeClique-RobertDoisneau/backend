@@ -39,6 +39,20 @@ class NodeDetailSerializer(ModelSerializer):
         
         response = super().to_representation(instance)
 
+        # Ajout des actions possibles sur ce noeud pour le frontend
+        request = self.context.get('request')
+        user = request.user if request else None
+        
+        can_edit = False
+        if user and user.is_authenticated:
+            if user.is_staff or user.is_superuser or getattr(instance, 'owner', None) == user:
+                can_edit = True
+                
+        response['actions'] = {
+            'edit': can_edit,
+            'delete': can_edit
+        }
+
         content = copy.deepcopy(response.get("content", {}))
 
         if instance.type == Node.Type.QUIZ:
