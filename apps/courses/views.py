@@ -1,3 +1,4 @@
+from apps.courses.serializers import NodeListSerializer
 from django.utils import dateparse
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -165,7 +166,7 @@ class NodeViewSet(ModelViewSet):
                 else:
                     raise ValidationError(f"Paramètre invalide : {part}")
 
-        serializer = NodeDetailSerializer(nodes, many=True)
+        serializer = NodeListSerializer(nodes, many=True)
         return Response(serializer.data, status=HTTP_200_OK)
 
 
