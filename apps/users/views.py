@@ -92,28 +92,33 @@ class ClassGroupViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, 
             self.permission_classes += [IsAdminUser]
         return super().get_permissions()
 
-    @action(detail=True, methods=['POST'], url_path='join-code')
+    @action(detail=True, methods=['POST', 'DELETE'], url_path='join-code')
     def join_code(self, request, pk):
         class_group = self.get_object()
 
-        if not class_group.join_code:
-            chars = string.ascii_uppercase + string.digits
+        if request.method == 'POST':
+            if not class_group.join_code:
+                chars = string.ascii_uppercase + string.digits
 
-            # Boucle pour s'assurer de l'unicité du code
-            while True:
-                new_code = ''.join(random.choice(chars) for _ in range(6))
-                # On sort de la boucle si aucun groupe n'a ce code
-                if not ClassGroup.objects.filter(join_code=new_code).exists():
-                    break
+                # Boucle pour s'assurer de l'unicité du code
+                while True:
+                    new_code = ''.join(random.choice(chars) for _ in range(6))
+                    # On sort de la boucle si aucun groupe n'a ce code
+                    if not ClassGroup.objects.filter(join_code=new_code).exists():
+                        break
 
-            class_group.join_code = new_code
+                class_group.join_code = new_code
+                class_group.save(update_fields=['join_code'])
+
+                return Response({'join_code': class_group.join_code}, status=status.HTTP_200_OK)
+
+            else:
+                return Response({'join_code': class_group.join_code}, status=status.HTTP_200_OK)
+        else : # request.method == 'DELETE'
+            class_group.join_code = None
             class_group.save(update_fields=['join_code'])
 
-            return Response({'join_code': class_group.join_code}, status=status.HTTP_200_OK)
-
-        else:
-            return Response({'join_code': class_group.join_code}, status=status.HTTP_200_OK)
-
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 class MembershipViewSet(ModelViewSet):
     queryset = Membership.objects.all()
