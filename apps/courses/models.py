@@ -39,6 +39,63 @@ class Node(models.Model):
     grade_level = CharField(max_length=2, choices=GradeLevel.choices, blank=True, null=False)
     difficulty = IntegerField(choices=Difficulty.choices, blank=True, null=True)
     subject = CharField(max_length=2, choices=Subject.choices, blank=True, null=False)
+
+    # Format attendu du champ JSON content selon le type de Node :
+    #
+    # Pour QUIZ ("QU") :
+    # [
+    # {
+        # "answers": [
+            # false,
+            # false,
+            # true,
+            # false
+        # ],
+        # "options": [
+            # "Lyon",
+            # "Marseille",
+            # "Paris",
+            # "Bordeaux"
+        # ],
+        # "question": "Quelle est la capitale de la France ?",
+        # "difficulty": 1,
+        # "explanation": "Paris est la capitale de la France depuis le Moyen Âge.",
+        # "instruction": "Choisissez une seule réponse.",
+        # "multiple_answers": false
+    # },
+    # {
+        # "answers": [
+            # true,
+            # false,
+            # true,
+            # false
+        # ],
+        # "options": [
+            # "Angular",
+            # "Django",
+            # "React",
+            # "Rails"
+        # ],
+        # "question": "Lesquels de ces frameworks sont basés sur JavaScript ou TypeScript ?",
+        # "difficulty": 1,
+        # "explanation": "Angular et React sont des technologies JS/TS. Django utilise Python et Rails utilise Ruby.",
+        # "instruction": "Plusieurs réponses possibles.",
+        # "multiple_answers": true
+    # } 
+    # ]
+    #
+    # Pour EXERCISE ("EX") :
+    # {
+    #   "content": "Le contenu en markdown.",
+    #   "answer": "Le résultat attendu du programme."
+    # } 
+    #
+    # Pour LESSON ("LE") :
+    # {
+    #   "content": "Le contenu en markdown."
+    # }
+    #
+    # Pour SYLLABUS, CHAPTER et SECTION : Chaîne vide "" ou non utilisé.
     content = JSONField(blank=True, null=False)
     authorized_groups = models.ManyToManyField('users.ClassGroup', related_name='authorized_nodes', blank=True)
 
