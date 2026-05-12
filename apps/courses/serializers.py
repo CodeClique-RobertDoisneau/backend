@@ -1,9 +1,10 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
 from apps.courses.models import Node, NodeLink, ClassGroupSyllabus
+from apps.users.models import User
+from apps.records.models import Progress
 import copy
 
-from apps.users.models import ClassGroup
 
 
 class NodeListSerializer(ModelSerializer):
@@ -47,28 +48,38 @@ class NodeDetailSerializer(ModelSerializer):
         if user and user.is_authenticated:
             if user.is_staff or user.is_superuser or getattr(instance, 'owner', None) == user:
                 can_edit = True
-                
+        can_get_correction = False 
+        if user and user.is_authenticated:
+            if user.is_staff or user.is_superuser or getattr(instance, 'owner', None) == user or \
+                user.role == User.Role.TEACHER or Progress.objects.filter(user=user, node=instance, status=Progress.Status.COMPLETED).exists():
+                can_get_correction = True
+
         response['actions'] = {
             'edit': can_edit,
-            'delete': can_edit
+            'delete': can_edit, 
+            'get_correction' : can_get_correction
         }
 
         content = copy.deepcopy(response.get("content", {}))
 
-        if instance.type == Node.Type.QUIZ:
-            if isinstance(content, list):
-                for question in content:
-                    if isinstance(question, dict):
-                        question.pop("answers", None)
-        elif instance.type == Node.Type.EXERCISE:
-            if isinstance(content, dict):
-                content.pop("answer", None)
-        
+        if not can_get_correction:
+            if instance.type == Node.Type.QUIZ:
+                if isinstance(content, list):
+                    for question in content:
+                        if isinstance(question, dict):
+                            question.pop("answers", None)
+            elif instance.type == Node.Type.EXERCISE:
+                if isinstance(content, dict):
+                    content.pop("answer", None)
+            
         response["content"] = content
         return response
 
 class NodeAnswersSerializer(ModelSerializer):
-
+    # Serializer qui comprend aussi toutes les réponses aux quiz et aux exercices
+    # Sert à sauvergarder l'état d'un exercice et ou d'un quiz (donc avec les réponses) pour Attempt
+    # (voir apps/courses/views.py)
+    # Il n'y a pas de champ children car il sert pour les exercices et les quiz. 
     class Meta:
         model = Node
         fields = ['id', 'owner', 'created_at', 'modified_at', 'type', 'public', 'title', 'description', 'grade_level',
