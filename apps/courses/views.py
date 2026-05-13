@@ -1,6 +1,6 @@
 from apps.records.serializers import AttemptSerializer
 from apps.courses.serializers import NodeListSerializer
-from django.utils import dateparse
+from django.utils import dateparse, timezone
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,7 +12,7 @@ from rest_framework.exceptions import ValidationError
 from apps.courses.models import Node, NodeLink, ClassGroupSyllabus
 from apps.courses.serializers import NodeDetailSerializer, NodeAnswersSerializer, NodeLinkSerializer, \
     ClassGroupSyllabusSerializer
-from apps.records.models import Attempt
+from apps.records.models import Attempt, Progress
 from apps.users.models import User
 from django.db.models import Q
 from apps.courses.permissions import (
@@ -43,7 +43,7 @@ class NodeViewSet(ModelViewSet):
     ordering = ['id'] # Tri par défaut
         
     def get_permissions(self):
-        if self.action == "answer":
+        if self.action in ["answer", "progress"]:
             return [IsAuthenticated()]
         if self.action == "create":
             return [CanCreateNode()]
@@ -140,6 +140,29 @@ class NodeViewSet(ModelViewSet):
                                 status=HTTP_200_OK)
             else:
                 raise ValidationError("Le type de noeu est invalide.")
+
+    @action(detail=True, methods=['POST'], url_path='progress')
+    def progress(self, request, pk):
+        node = self.get_object()
+
+        if not "action_performed" in request.data or \
+            request.data["action_performed"] not in ["opened", "studied", "completed"]:
+            raise ValidationError("JSON invalide")
+        
+        action_performed = request.data["action_performed"]
+        progress, created = Progress.objects.get_or_create(user=request.user, node=node)
+
+        if action_performed == "studied" and progress.status != Progress.Status.COMPLETED:
+            progress.status = Progress.Status.IN_PROGRESS
+        
+        if action_performed == "completed" and progress.status != Progress.Status.COMPLETED:
+            progress.status = Progress.Status.COMPLETED
+            progress.completed_at = timezone.now()
+
+        progress.save()
+
+        return Response(status=HTTP_200_OK)
+
 
     @action(detail=False, methods=['GET'], url_path=r'codeclique(?:/(?P<path>[a-z/]+))?')
     def codeclique(self, request, path=None):
