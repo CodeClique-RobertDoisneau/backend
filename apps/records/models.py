@@ -39,6 +39,7 @@ class Progress(models.Model):
     
     # Métriques de temps
     started_at = models.DateTimeField(auto_now_add=True, null=False)    # Date à laquelle l'utilisateur a ouvert le noeud pour la première fois
+    in_progress_at = models.DateTimeField(null=True)                    # Date à laquelle le noeud est passé à IN_PROGRESS, ce champ est non null ssi (status = IN_PROGRESS ou status = COMPLETED)
     completed_at = models.DateTimeField(null=True)                      # Date à laquelle le noeud est passé à COMPLETED, ce champ est non null ssi status = COMPLETED
     last_seen_at = models.DateTimeField(auto_now=True, null=False)      # Date de la dernière action (dernier essai ou dernière lecture)
 

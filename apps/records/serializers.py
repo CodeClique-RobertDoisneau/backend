@@ -43,3 +43,8 @@ class AttemptSerializer(serializers.ModelSerializer):
             response["attempt"] = attempt
         
         return response
+
+class ProgressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Progress
+        fields = '__all__'

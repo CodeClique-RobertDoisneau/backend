@@ -4,9 +4,8 @@ from django.utils import dateparse, timezone
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, RetrieveModelMixin
 from rest_framework.status import HTTP_200_OK, HTTP_409_CONFLICT, HTTP_500_INTERNAL_SERVER_ERROR
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.exceptions import ValidationError
 
 from apps.courses.models import Node, NodeLink, ClassGroupSyllabus
@@ -22,6 +21,8 @@ from apps.courses.permissions import (
 )
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from apps.records.services import get_descendant_leaves_map, compute_simple_stats, compute_detailed_stats, compute_timeline
+from collections import defaultdict
 
 
 class NodeViewSet(ModelViewSet):
@@ -43,7 +44,7 @@ class NodeViewSet(ModelViewSet):
     ordering = ['id'] # Tri par défaut
         
     def get_permissions(self):
-        if self.action in ["answer", "progress"]:
+        if self.action in ["answer", "progress", "stats", "detailed_stats"]:
             return [IsAuthenticated()]
         if self.action == "create":
             return [CanCreateNode()]
@@ -152,7 +153,8 @@ class NodeViewSet(ModelViewSet):
         action_performed = request.data["action_performed"]
         progress, created = Progress.objects.get_or_create(user=request.user, node=node)
 
-        if action_performed == "studied" and progress.status != Progress.Status.COMPLETED:
+        if action_performed == "studied" and progress.status == Progress.Status.NOT_STARTED:
+            progress.in_progress_at = timezone.now()
             progress.status = Progress.Status.IN_PROGRESS
         
         if action_performed == "completed" and progress.status != Progress.Status.COMPLETED:
@@ -163,6 +165,54 @@ class NodeViewSet(ModelViewSet):
 
         return Response(status=HTTP_200_OK)
 
+    @action(detail=True, methods=['GET'], url_path='stats')
+    def stats(self, request, pk=None):
+        node = self.get_object()
+        
+        # On récupère toutes les feuilles de ce noeud (Leçons, Quiz, Exercices)
+        leaves_map = get_descendant_leaves_map([node])
+        leaves = leaves_map.get(node.id, [])
+        
+        # On récupère les progressions de l'utilisateur pour ne faire qu'une seule requête
+        leaf_ids = [leaf.id for leaf in leaves]
+        progresses = Progress.objects.filter(user=request.user, node_id__in=leaf_ids)
+        progresses_by_node_id = {p.node_id: p for p in progresses}
+        
+        stats = compute_simple_stats(leaves, progresses_by_node_id)
+        return Response(stats, status=HTTP_200_OK)
+
+    @action(detail=True, methods=['GET'], url_path='detailed-stats')
+    def detailed_stats(self, request, pk=None):
+        node = self.get_object()
+        
+        leaves_map = get_descendant_leaves_map([node])
+        leaves = leaves_map.get(node.id, [])
+        
+        leaf_ids = [leaf.id for leaf in leaves]
+        progresses = Progress.objects.filter(user=request.user, node_id__in=leaf_ids)
+        progresses_by_node_id = {p.node_id: p for p in progresses}
+        
+        detailed_stats = compute_detailed_stats(leaves, progresses_by_node_id)
+        return Response(detailed_stats, status=HTTP_200_OK)
+
+    @action(detail=True, methods=['GET'], url_path='timeline')
+    def timeline(self, request, pk=None):
+        node = self.get_object()
+        
+        leaves_map = get_descendant_leaves_map([node])
+        leaves = leaves_map.get(node.id, [])
+        
+        leaf_ids = [leaf.id for leaf in leaves]
+        progresses = Progress.objects.filter(user=request.user, node_id__in=leaf_ids)
+        progresses_by_node_id = {p.node_id: p for p in progresses}
+        
+        attempts = Attempt.objects.filter(user=request.user, node_id__in=leaf_ids)
+        attempts_by_node_id = defaultdict(list)
+        for att in attempts:
+            attempts_by_node_id[att.node_id].append(att)
+            
+        timeline_data = compute_timeline(progresses_by_node_id, attempts_by_node_id)
+        return Response(timeline_data, status=HTTP_200_OK)
 
     @action(detail=False, methods=['GET'], url_path=r'codeclique(?:/(?P<path>[a-z/]+))?')
     def codeclique(self, request, path=None):
