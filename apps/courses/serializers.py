@@ -50,9 +50,37 @@ class NodeDetailSerializer(ModelSerializer):
                 can_edit = True
         can_get_correction = False 
         if user and user.is_authenticated:
+            try:
+                # On utilise .get() car l'objet est unique pour un (user, node) donné
+                progress = Progress.objects.get(user=user, node=instance)
+                response['progress'] = {
+                    'started_at': progress.started_at.isoformat() if progress.started_at else None,
+                    'in_progress_at': progress.in_progress_at.isoformat() if progress.in_progress_at else None,
+                    'completed_at': progress.completed_at.isoformat() if progress.completed_at else None,
+                    'last_seen_at': progress.last_seen_at.isoformat() if progress.last_seen_at else None,
+                    'status': progress.status
+                }
+                
+                # Si le noeud est terminé, l'utilisateur a accès à la correction
+                if progress.status == Progress.Status.COMPLETED:
+                    can_get_correction = True
+                    
+            except Progress.DoesNotExist:
+                # Valeurs par défaut si le noeud n'a jamais été ouvert par l'étudiant
+                response['progress'] = {
+                    'started_at': None,
+                    'in_progress_at': None,
+                    'completed_at': None,
+                    'last_seen_at': None,
+                    'status': Progress.Status.NOT_STARTED
+                }
+                
+            # Autres conditions pour avoir la correction (professeur, admin, owner...)
             if user.is_staff or user.is_superuser or getattr(instance, 'owner', None) == user or \
-                user.role == User.Role.TEACHER or Progress.objects.filter(user=user, node=instance, status=Progress.Status.COMPLETED).exists():
+                user.role == User.Role.TEACHER:
                 can_get_correction = True
+        else:
+            response['progress'] = None
 
         response['actions'] = {
             'edit': can_edit,
