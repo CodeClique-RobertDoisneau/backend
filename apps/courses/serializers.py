@@ -105,7 +105,7 @@ class NodeDetailSerializer(ModelSerializer):
 
 class NodeAnswersSerializer(ModelSerializer):
     # Serializer qui comprend aussi toutes les réponses aux quiz et aux exercices
-    # Sert à sauvergarder l'état d'un exercice et ou d'un quiz (donc avec les réponses) pour Attempt
+    # Sert à sauvegarder l'état d'un exercice et ou d'un quiz (donc avec les réponses) pour Attempt
     # (voir apps/courses/views.py)
     # Il n'y a pas de champ children car il sert pour les exercices et les quiz. 
     class Meta:
