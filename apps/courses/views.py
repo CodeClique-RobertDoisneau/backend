@@ -138,7 +138,7 @@ class NodeViewSet(ModelViewSet):
                 return Response({ "correct" : user_answer == correct_answer },
                                 status=HTTP_200_OK)
             else:
-                raise ValidationError("Le type de noeu est invalide.")
+                raise ValidationError("Le type de noeud est invalide.")
 
     @action(detail=True, methods=['POST'], url_path='progress')
     def progress(self, request, pk):
