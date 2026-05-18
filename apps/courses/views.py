@@ -44,7 +44,7 @@ class NodeViewSet(ModelViewSet):
     ordering = ['id'] # Tri par défaut
         
     def get_permissions(self):
-        if self.action in ["answer", "progress", "stats", "detailed_stats"]:
+        if self.action in ["answer", "progress", "stats", "detailed_stats", "timeline"]:
             return [IsAuthenticated()]
         if self.action == "create":
             return [CanCreateNode()]
