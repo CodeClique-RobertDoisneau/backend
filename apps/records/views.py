@@ -24,7 +24,7 @@ class ProgressViewSet(ModelViewSet):
         if self.request.user.is_staff or self.request.user.is_superuser:
             return queryset
         
-        # Je n'ai pas encore implémenté le fait qu'un professesur peut voir la progression de 
+        # Je n'ai pas encore implémenté le fait qu'un professeur peut voir la progression de 
         # ses élèves, ou l'administrateur d'un groupe sur les membres et les cours du groupe...
 
         # Un étudiant ne peut voir que sa propre progression
