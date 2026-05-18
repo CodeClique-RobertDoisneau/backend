@@ -6,6 +6,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 from apps.courses.views import NodeViewSet, NodeLinkViewSet, ClassGroupSyllabusViewSet
 from apps.users.views import UserViewSet, ClassGroupViewSet, MembershipViewSet
+from apps.records.views import ProgressViewSet
 
 router = routers.SimpleRouter()
 router.register('class-groups', ClassGroupViewSet)
@@ -14,6 +15,7 @@ router.register('nodes', NodeViewSet)
 router.register('memberships', MembershipViewSet)
 router.register('nodelinks', NodeLinkViewSet)
 router.register('classgroupsyllabus', ClassGroupSyllabusViewSet)
+router.register('progress', ProgressViewSet)
 
 urlpatterns = [
     path('api/admin/', admin.site.urls),

@@ -1,19 +1,19 @@
+from apps.records.serializers import AttemptSerializer
 from apps.courses.serializers import NodeListSerializer
-from django.utils import dateparse
+from django.utils import dateparse, timezone
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, RetrieveModelMixin
 from rest_framework.status import HTTP_200_OK, HTTP_409_CONFLICT, HTTP_500_INTERNAL_SERVER_ERROR
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.exceptions import ValidationError
 
 from apps.courses.models import Node, NodeLink, ClassGroupSyllabus
 from apps.courses.serializers import NodeDetailSerializer, NodeAnswersSerializer, NodeLinkSerializer, \
     ClassGroupSyllabusSerializer
-from apps.records.models import Attempt
+from apps.records.models import Attempt, Progress
 from apps.users.models import User
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from apps.courses.permissions import (
     CanRetrieveNode, CanCreateNode, CanEditNode, 
     CanRetrieveNodeLink, CanEditNodeLink, 
@@ -21,6 +21,8 @@ from apps.courses.permissions import (
 )
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from apps.records.services import get_descendant_leaves_map, compute_simple_stats, compute_detailed_stats, compute_timeline
+from collections import defaultdict
 
 
 class NodeViewSet(ModelViewSet):
@@ -42,7 +44,7 @@ class NodeViewSet(ModelViewSet):
     ordering = ['id'] # Tri par défaut
         
     def get_permissions(self):
-        if self.action == "answer":
+        if self.action in ["answer", "progress", "stats", "detailed_stats", "timeline"]:
             return [IsAuthenticated()]
         if self.action == "create":
             return [CanCreateNode()]
@@ -54,6 +56,18 @@ class NodeViewSet(ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        
+        # On charge aussi la progression de l'utilisateur de manière à ne faire qu'une seule
+        # requête dans la base de données et éviter le problème des N+1 queries. 
+        if self.request.user.is_authenticated:
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    'progressions',
+                    queryset=Progress.objects.filter(user=self.request.user),
+                    to_attr='user_progress'
+                )
+            )
+
         if self.request.user.is_staff or self.request.user.is_superuser:
             return queryset
         
@@ -64,74 +78,172 @@ class NodeViewSet(ModelViewSet):
             
         return queryset.filter(q_objects).distinct()
 
-    @action(detail=True, methods=['POST'], url_path='answer')
+    @action(detail=True, methods=['GET', 'POST'], url_path='answer')
     def answer(self, request, pk):
-        if not "modified_at" in request.data or not "answer" in request.data:
-            raise ValidationError("JSON invalide.")
-
-        user_modified_at = request.data["modified_at"]
         node = self.get_object()
 
-        if node.modified_at != dateparse.parse_datetime(user_modified_at):
-            return Response(
-                {"detail": "Ce nœud a été modifié par le professeur pendant que vous répondiez. Veuillez rafraîchir la page."}, 
-                status=HTTP_409_CONFLICT
-            )
-        
-        user_answer = request.data["answer"]
-        if node.type == Node.Type.QUIZ:
-            correct_answers = [q.get("answers") for q in node.content]
+        if request.method == 'GET':
+            attempts = Attempt.objects.filter(user=request.user, node=node)
+            
+            # Calcul de correction_included une seule fois pour tous les essais afin d'éviter le N+1 queries
+            user = request.user
+            correction_included = False
+            if user and user.is_authenticated:
+                # Utilisation du cache Prefetch (user_progress)
+                if hasattr(node, 'user_progress'):
+                    progress = node.user_progress[0] if node.user_progress else None
+                else:
+                    progress = Progress.objects.filter(user=user, node=node).first()
+                
+                if user.is_staff or user.is_superuser or getattr(node, 'owner', None) == user or \
+                    user.role == User.Role.TEACHER or (progress and progress.status == Progress.Status.COMPLETED):
+                    correction_included = True
 
-            # On vérifie que les réponses de l'utilisateur sont sous le bon format
-            if len(user_answer) != len(correct_answers):
-                print("Différente taille.")
+            context = self.get_serializer_context()
+            context['correction_included'] = correction_included
+
+            serializer = AttemptSerializer(attempts, many=True, context=context)
+            return Response(serializer.data, status=HTTP_200_OK)
+
+        elif request.method == 'POST':
+            if not "modified_at" in request.data or not "answer" in request.data:
                 raise ValidationError("JSON invalide.")
-            for q_a, q_b in zip(user_answer, correct_answers):
-                if not isinstance(q_a, list) or len(q_a) != len(q_b):
-                    print("Pas de sous-liste ou différente taille de sous-liste.")
+
+            user_modified_at = request.data["modified_at"]
+            
+            if node.modified_at != dateparse.parse_datetime(user_modified_at):
+                return Response(
+                    {"detail": "Ce nœud a été modifié par le professeur pendant que vous répondiez. Veuillez rafraîchir la page."}, 
+                    status=HTTP_409_CONFLICT
+                )
+            
+            user_answer = request.data["answer"]
+            if node.type == Node.Type.QUIZ:
+                correct_answers = [q.get("answers") for q in node.content]
+
+                # On vérifie que les réponses de l'utilisateur sont sous le bon format
+                if len(user_answer) != len(correct_answers):
+                    raise ValidationError("JSON invalide.")
+                for q_a, q_b in zip(user_answer, correct_answers):
+                    if not isinstance(q_a, list) or len(q_a) != len(q_b):
+                        raise ValidationError("JSON invalide.")
+
+                    for a in q_a: 
+                        if not isinstance(a, bool):
+                            raise ValidationError("JSON invalide.")       
+
+
+                # On enregistre les données de l'essai dans la base de données
+                serializer = NodeAnswersSerializer(node)
+                Attempt.objects.create(
+                    user=request.user,
+                    node=node,
+                    attempt={
+                        "node": serializer.data, # On enregiste le JSON du noeud pour le cas où le noeud est modifié à l'avenir.
+                        "answer": user_answer
+                    }
+                )
+
+                return Response({ "answers": correct_answers }, status=HTTP_200_OK)
+
+            elif node.type == Node.Type.EXERCISE:
+                correct_answer = node.content.get("answer")
+
+                # On vérifie que la réponse de l'utilisateur est au bon format
+                if not isinstance(user_answer, str):
                     raise ValidationError("JSON invalide.")
 
-                for a in q_a: 
-                    if not isinstance(a, bool):
-                        raise ValidationError("JSON invalide.")       
+                serializer = NodeAnswersSerializer(node)
 
 
-            # On enregistre les données de l'essai dans la base de données
-            serializer = NodeAnswersSerializer(node)
-            Attempt.objects.create(
-                user=request.user,
-                node=node,
-                attempt={
-                    "node": serializer.data, # On enregiste le JSON du noeud pour le cas où le noeud est modifié à l'avenir.
-                    "answer": user_answer
-                }
-            )
+                Attempt.objects.create(
+                    user=request.user, 
+                    node=node, 
+                    attempt={
+                        "node": serializer.data, 
+                        "answer": user_answer
+                    }
+                )
 
-            return Response({ "answers": correct_answers }, status=HTTP_200_OK)
+                return Response({ "correct" : user_answer == correct_answer },
+                                status=HTTP_200_OK)
+            else:
+                raise ValidationError("Le type de noeud est invalide.")
 
-        elif node.type == Node.Type.EXERCISE:
-            correct_answer = node.content.get("answer")
+    @action(detail=True, methods=['POST'], url_path='progress')
+    def progress(self, request, pk):
+        node = self.get_object()
 
-            # On vérifie que la réponse de l'utilisateur est au bon format
-            if not isinstance(user_answer, str):
-                raise ValidationError("JSON invalide.")
+        if not "action_performed" in request.data or \
+            request.data["action_performed"] not in ["opened", "studied", "completed"]:
+            raise ValidationError("JSON invalide")
+        
+        action_performed = request.data["action_performed"]
+        progress, created = Progress.objects.get_or_create(user=request.user, node=node)
 
-            serializer = NodeAnswersSerializer(self.get_object())
+        if action_performed == "studied" and progress.status == Progress.Status.NOT_STARTED:
+            progress.in_progress_at = timezone.now()
+            progress.status = Progress.Status.IN_PROGRESS
+        
+        if action_performed == "completed" and progress.status != Progress.Status.COMPLETED:
+            now = timezone.now()
+            if not progress.in_progress_at:
+                progress.in_progress_at = now
+            progress.status = Progress.Status.COMPLETED
+            progress.completed_at = now
 
+        progress.save()
 
-            Attempt.objects.create(
-                user=request.user, 
-                node=node, 
-                attempt={
-                    "node": serializer.data, 
-                    "answer": user_answer
-                }
-            )
+        return Response(status=HTTP_200_OK)
 
-            return Response({ "correct" : user_answer == correct_answer },
-                            status=HTTP_200_OK)
-        else:
-            raise ValidationError("Le type de noeu est invalide.")
+    @action(detail=True, methods=['GET'], url_path='stats')
+    def stats(self, request, pk=None):
+        node = self.get_object()
+        
+        # On récupère toutes les feuilles de ce noeud (Leçons, Quiz, Exercices)
+        leaves_map = get_descendant_leaves_map([node])
+        leaves = leaves_map.get(node.id, [])
+        
+        # On récupère les progressions de l'utilisateur pour ne faire qu'une seule requête
+        leaf_ids = [leaf.id for leaf in leaves]
+        progresses = Progress.objects.filter(user=request.user, node_id__in=leaf_ids)
+        progresses_by_node_id = {p.node_id: p for p in progresses}
+        
+        stats = compute_simple_stats(leaves, progresses_by_node_id)
+        return Response(stats, status=HTTP_200_OK)
+
+    @action(detail=True, methods=['GET'], url_path='detailed-stats')
+    def detailed_stats(self, request, pk=None):
+        node = self.get_object()
+        
+        leaves_map = get_descendant_leaves_map([node])
+        leaves = leaves_map.get(node.id, [])
+        
+        leaf_ids = [leaf.id for leaf in leaves]
+        progresses = Progress.objects.filter(user=request.user, node_id__in=leaf_ids)
+        progresses_by_node_id = {p.node_id: p for p in progresses}
+        
+        detailed_stats = compute_detailed_stats(leaves, progresses_by_node_id)
+        return Response(detailed_stats, status=HTTP_200_OK)
+
+    @action(detail=True, methods=['GET'], url_path='timeline')
+    def timeline(self, request, pk=None):
+        node = self.get_object()
+        
+        leaves_map = get_descendant_leaves_map([node])
+        leaves = leaves_map.get(node.id, [])
+        
+        leaf_ids = [leaf.id for leaf in leaves]
+        progresses = Progress.objects.filter(user=request.user, node_id__in=leaf_ids)
+        progresses_by_node_id = {p.node_id: p for p in progresses}
+        
+        attempts = Attempt.objects.filter(user=request.user, node_id__in=leaf_ids)
+        attempts_by_node_id = defaultdict(list)
+        for att in attempts:
+            attempts_by_node_id[att.node_id].append(att)
+            
+        timeline_data = compute_timeline(progresses_by_node_id, attempts_by_node_id)
+        return Response(timeline_data, status=HTTP_200_OK)
 
     @action(detail=False, methods=['GET'], url_path=r'codeclique(?:/(?P<path>[a-z/]+))?')
     def codeclique(self, request, path=None):
