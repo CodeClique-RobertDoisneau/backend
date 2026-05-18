@@ -50,9 +50,13 @@ class NodeDetailSerializer(ModelSerializer):
                 can_edit = True
         can_get_correction = False 
         if user and user.is_authenticated:
-            try:
-                # On utilise .get() car l'objet est unique pour un (user, node) donné
-                progress = Progress.objects.get(user=user, node=instance)
+            # Si Prefetch a été utilisé dans le ViewSet, on utilise l'attribut en cache pour éviter le N+1 queries
+            if hasattr(instance, 'user_progress'):
+                progress = instance.user_progress[0] if instance.user_progress else None
+            else:
+                progress = Progress.objects.filter(user=user, node=instance).first() # renvoie None si filter est une "liste vide"
+
+            if progress:
                 response['progress'] = {
                     'started_at': progress.started_at.isoformat() if progress.started_at else None,
                     'in_progress_at': progress.in_progress_at.isoformat() if progress.in_progress_at else None,
@@ -64,8 +68,7 @@ class NodeDetailSerializer(ModelSerializer):
                 # Si le noeud est terminé, l'utilisateur a accès à la correction
                 if progress.status == Progress.Status.COMPLETED:
                     can_get_correction = True
-                    
-            except Progress.DoesNotExist:
+            else:
                 # Valeurs par défaut si le noeud n'a jamais été ouvert par l'étudiant
                 response['progress'] = {
                     'started_at': None,

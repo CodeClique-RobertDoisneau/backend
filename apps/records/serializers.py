@@ -18,11 +18,16 @@ class AttemptSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         user = request.user if request else None
         
-        correction_included = False 
-        if user and user.is_authenticated:
-            if user.is_staff or user.is_superuser or getattr(instance.node, 'owner', None) == user or \
-                user.role == User.Role.TEACHER or Progress.objects.filter(user=user, node=instance.node, status=Progress.Status.COMPLETED).exists():
-                correction_included = True
+        # On récupère d'abord depuis le contexte pour éviter de requêter la BDD en boucle (N+1)
+        if 'correction_included' in self.context:
+            correction_included = self.context.get('correction_included')
+        else:
+            # Sinon on est obligé de faire une requête dans la base de données (Progress.objects...)
+            correction_included = False 
+            if user and user.is_authenticated:
+                if user.is_staff or user.is_superuser or getattr(instance.node, 'owner', None) == user or \
+                    user.role == User.Role.TEACHER or Progress.objects.filter(user=user, node=instance.node, status=Progress.Status.COMPLETED).exists():
+                    correction_included = True
 
         response['correction_included'] = correction_included
 

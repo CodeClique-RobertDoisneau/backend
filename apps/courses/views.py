@@ -13,7 +13,7 @@ from apps.courses.serializers import NodeDetailSerializer, NodeAnswersSerializer
     ClassGroupSyllabusSerializer
 from apps.records.models import Attempt, Progress
 from apps.users.models import User
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from apps.courses.permissions import (
     CanRetrieveNode, CanCreateNode, CanEditNode, 
     CanRetrieveNodeLink, CanEditNodeLink, 
@@ -56,6 +56,18 @@ class NodeViewSet(ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        
+        # On charge aussi la progression de l'utilisateur de manière à ne faire qu'une seule
+        # requête dans la base de données et éviter le problème des N+1 queries. 
+        if self.request.user.is_authenticated:
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    'progressions',
+                    queryset=Progress.objects.filter(user=self.request.user),
+                    to_attr='user_progress'
+                )
+            )
+
         if self.request.user.is_staff or self.request.user.is_superuser:
             return queryset
         
@@ -72,7 +84,25 @@ class NodeViewSet(ModelViewSet):
 
         if request.method == 'GET':
             attempts = Attempt.objects.filter(user=request.user, node=node)
-            serializer = AttemptSerializer(attempts, many=True, context=self.get_serializer_context())
+            
+            # Calcul de correction_included une seule fois pour tous les essais afin d'éviter le N+1 queries
+            user = request.user
+            correction_included = False
+            if user and user.is_authenticated:
+                # Utilisation du cache Prefetch (user_progress)
+                if hasattr(node, 'user_progress'):
+                    progress = node.user_progress[0] if node.user_progress else None
+                else:
+                    progress = Progress.objects.filter(user=user, node=node).first()
+                
+                if user.is_staff or user.is_superuser or getattr(node, 'owner', None) == user or \
+                    user.role == User.Role.TEACHER or (progress and progress.status == Progress.Status.COMPLETED):
+                    correction_included = True
+
+            context = self.get_serializer_context()
+            context['correction_included'] = correction_included
+
+            serializer = AttemptSerializer(attempts, many=True, context=context)
             return Response(serializer.data, status=HTTP_200_OK)
 
         elif request.method == 'POST':
