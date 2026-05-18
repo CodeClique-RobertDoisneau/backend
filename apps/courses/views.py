@@ -93,11 +93,9 @@ class NodeViewSet(ModelViewSet):
 
                 # On vérifie que les réponses de l'utilisateur sont sous le bon format
                 if len(user_answer) != len(correct_answers):
-                    print("Différente taille.")
                     raise ValidationError("JSON invalide.")
                 for q_a, q_b in zip(user_answer, correct_answers):
                     if not isinstance(q_a, list) or len(q_a) != len(q_b):
-                        print("Pas de sous-liste ou différente taille de sous-liste.")
                         raise ValidationError("JSON invalide.")
 
                     for a in q_a: 
