@@ -10,7 +10,7 @@ def build_node_tree_in_memory():
     
     # Construit un dictionnaire parent -> liste d'enfants
     links_by_parent = defaultdict(list) # dictionnaire qui renvoie une liste vide 
-                                        # plutôt qu'une KeyError quand la clé n'exsite pas
+                                        # plutôt qu'une KeyError quand la clé n'existe pas
     for link in NodeLink.objects.all():
         links_by_parent[link.parent_id].append(link.child_id)
         
