@@ -156,8 +156,11 @@ class NodeViewSet(ModelViewSet):
             progress.status = Progress.Status.IN_PROGRESS
         
         if action_performed == "completed" and progress.status != Progress.Status.COMPLETED:
+            now = timezone.now()
+            if not progress.in_progress_at:
+                progress.in_progress_at = now
             progress.status = Progress.Status.COMPLETED
-            progress.completed_at = timezone.now()
+            progress.completed_at = now
 
         progress.save()
 
