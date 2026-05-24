@@ -1,18 +1,28 @@
-FROM python:3.14-slim
+# Stage 1: Build virtual environment
+FROM python:3.13-slim AS build
 
-# Prevents Python from writing pyc files to disk
-ENV PYTHONDONTWRITEBYTECODE=1
-# Prevents Python from buffering stdout and stderr
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-WORKDIR /app
+WORKDIR /build
 
 COPY pyproject.toml .
 
-RUN pip install --no-cache-dir .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m venv /opt/venv && \
+    /opt/venv/bin/pip install .
+
+# Stage 2: Clean runner
+FROM python:3.13-slim AS prod
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH"
+
+WORKDIR /app
+
+COPY --from=build /opt/venv /opt/venv
 
 COPY . .
-
-EXPOSE 3000
 
 CMD ["gunicorn", "--bind", "0.0.0.0:3000", "codeclique.wsgi:application"]

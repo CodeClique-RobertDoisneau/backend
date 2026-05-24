@@ -1,18 +1,15 @@
-FROM python:3.14-slim
+FROM python:3.13-slim AS dev
 
-# Prevents Python from writing pyc files to disk
-ENV PYTHONDONTWRITEBYTECODE=1
-# Prevents Python from buffering stdout and stderr
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
 COPY pyproject.toml .
 
-RUN pip install --no-cache-dir .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install .
 
 COPY . .
-
-EXPOSE 3000
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:3000"]
